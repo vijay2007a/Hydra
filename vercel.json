@@ -1,0 +1,11 @@
+{
+  "buildCommand": "cd hydra/stitch_hydrocast_urban_nowcasting && npm run build",
+  "outputDirectory": "hydra/stitch_hydrocast_urban_nowcasting/dist",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

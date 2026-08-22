@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hydrocast - Rainfall Analytics</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;family=Sora:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container-high": "#252a31",
+                        "outline": "#849495",
+                        "on-secondary-fixed": "#320047",
+                        "inverse-on-surface": "#2b3138",
+                        "on-secondary-fixed-variant": "#74009f",
+                        "on-tertiary-container": "#af009d",
+                        "on-tertiary-fixed-variant": "#840076",
+                        "absolute-black": "#000000",
+                        "on-tertiary": "#5e0053",
+                        "surface-tint": "#00dbe7",
+                        "on-primary-fixed-variant": "#004f54",
+                        "tertiary-fixed": "#ffd7f0",
+                        "error": "#ffb4ab",
+                        "secondary-container": "#ce5dff",
+                        "primary-fixed-dim": "#00dbe7",
+                        "surface-container-lowest": "#090f15",
+                        "secondary": "#ebb2ff",
+                        "surface-bright": "#343a41",
+                        "tertiary-container": "#ffccee",
+                        "glow-cyan": "rgba(0, 242, 255, 0.4)",
+                        "secondary-fixed-dim": "#ebb2ff",
+                        "error-container": "#93000a",
+                        "warning-orange": "#ffaa00",
+                        "on-background": "#dde3ec",
+                        "on-secondary": "#520071",
+                        "outline-variant": "#3a494b",
+                        "primary-container": "#00f2ff",
+                        "surface-container": "#1a2027",
+                        "primary-fixed": "#74f5ff",
+                        "surface": "#0e141a",
+                        "on-surface-variant": "#b9cacb",
+                        "on-error": "#690005",
+                        "on-secondary-container": "#480064",
+                        "on-primary-fixed": "#002022",
+                        "background": "#0e141a",
+                        "on-primary": "#00363a",
+                        "primary": "#e1fdff",
+                        "inverse-primary": "#00696f",
+                        "glass-surface": "rgba(5, 10, 16, 0.7)",
+                        "tertiary": "#fff5f8",
+                        "tertiary-fixed-dim": "#fface8",
+                        "surface-container-highest": "#2f353c",
+                        "on-error-container": "#ffdad6",
+                        "secondary-fixed": "#f8d8ff",
+                        "inverse-surface": "#dde3ec",
+                        "on-primary-container": "#006a71",
+                        "on-tertiary-fixed": "#3a0033",
+                        "on-surface": "#dde3ec",
+                        "surface-variant": "#2f353c",
+                        "surface-container-low": "#161c23",
+                        "surface-dim": "#0e141a"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    spacing: {
+                        "glass-padding": "24px",
+                        "unit": "4px",
+                        "gutter": "20px",
+                        "margin-desktop": "40px",
+                        "margin-mobile": "16px"
+                    },
+                    fontFamily: {
+                        "data-mono": ["JetBrains Mono", "monospace"],
+                        "headline-lg": ["Sora", "sans-serif"],
+                        "label-caps": ["JetBrains Mono", "monospace"],
+                        "headline-lg-mobile": ["Sora", "sans-serif"],
+                        "display-lg": ["Sora", "sans-serif"],
+                        "body-lg": ["Inter", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"]
+                    },
+                    fontSize: {
+                        "data-mono": ["14px", { lineHeight: "20px", fontWeight: "500" }],
+                        "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "label-caps": ["12px", { lineHeight: "16px", letterSpacing: "0.1em", fontWeight: "600" }],
+                        "headline-lg-mobile": ["24px", { lineHeight: "32px", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "display-lg": ["48px", { lineHeight: "56px", letterSpacing: "-0.04em", fontWeight: "800" }],
+                        "body-lg": ["18px", { lineHeight: "28px", letterSpacing: "-0.01em", fontWeight: "400" }],
+                        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom Utilities for Glow Effects */
+        .drop-shadow-glow-cyan {
+            filter: drop-shadow(0 0 12px rgba(0, 242, 255, 0.6));
+        }
+        .box-shadow-glow-cyan {
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+        }
+        .chart-grid-line {
+            stroke: rgba(132, 148, 149, 0.1);
+            stroke-width: 1;
+        }
+        .chart-path-glow {
+            filter: drop-shadow(0 0 8px rgba(0, 242, 255, 0.8));
+        }
+        .animate-pulse-slow {
+            animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+        .aurora-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 242, 255, 0.3), transparent);
+        }
+    </style>
+</head>
+<body class="bg-absolute-black text-on-surface font-body-md antialiased overflow-x-hidden min-h-screen flex flex-col">
+<!-- TopNavBar (JSON Injected) -->
+<nav class="fixed top-0 w-full z-50 bg-glass-surface backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_0_20px_rgba(0,219,231,0.15)] flex justify-between items-center px-margin-desktop py-4 w-full md:flex hidden">
+<div class="flex items-center gap-8">
+<div class="font-display-lg text-headline-lg tracking-tighter text-primary-container drop-shadow-glow-cyan">HYDROCAST</div>
+<div class="flex items-center gap-6 font-label-caps text-label-caps">
+<!-- Navigation Links -->
+<a class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:scale-95" href="#">Home</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:scale-95" href="#">Command</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:scale-95" href="#">Map</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:scale-95" href="#">Predict</a>
+<!-- Active Link: Rainfall -->
+<a class="text-primary-container border-b-2 border-primary-container pb-1 drop-shadow-glow-cyan cursor-pointer active:scale-95" href="#">Rainfall</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:scale-95" href="#">Alerts</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative group">
+<input class="bg-absolute-black border border-outline-variant text-on-surface font-data-mono text-data-mono px-4 py-2 rounded-DEFAULT focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all w-64" placeholder="Search..." type="text"/>
+<span class="material-symbols-outlined absolute right-3 top-2 text-outline-variant pointer-events-none">search</span>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:scale-95 w-10 h-10 flex items-center justify-center rounded-DEFAULT hover:bg-surface-bright/20 transition-all duration-300">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:scale-95 w-10 h-10 flex items-center justify-center rounded-DEFAULT hover:bg-surface-bright/20 transition-all duration-300">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-surface-container-high border border-outline-variant overflow-hidden cursor-pointer hover:border-primary-container transition-colors">
+<img alt="Operator Profile" class="w-full h-full object-cover" data-alt="A highly detailed, cinematic headshot of an elite cyber operator in a dark, high-tech command center. Ambient blue and cyan lighting reflects off their face, conveying intense focus and authority. The mood is serious and professional, fitting a high-end predictive intelligence interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDefhihCp1TyszaYjGH2guOvfYSdu5kPNUqZDXxBWn-E0BKe7Ua1iDTeBn4W-ToL90joJuAg28BqoWM5dSFEcsU8dLiOgI9pkfau5MMHd2Y0Kd0IlA6a7ABL-ua0F5L2x7htyDiz1B3Q0PhhNABvXpSabcZxqNnYbH6rvJO6nm3eSpN7pOMzgp6E_SYLhLxfCvKHxQdXup8Hjs3LqtKFhj3fW70pTJRFNrzSv1_0FLcYH9iYZHqcnvt"/>
+</div>
+</div>
+</nav>
+<div class="flex flex-1 pt-20">
+<!-- SideNavBar (JSON Injected) -->
+<aside class="hidden md:flex flex-col h-screen w-64 border-r border-outline-variant/20 bg-surface-container-lowest/80 backdrop-blur-2xl shadow-2xl py-glass-padding fixed left-0 top-20 z-40">
+<div class="px-6 mb-8">
+<div class="flex items-center gap-3 mb-2">
+<div class="w-8 h-8 rounded-DEFAULT bg-primary-container/20 border border-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-container text-sm">rocket_launch</span>
+</div>
+<div>
+<h2 class="font-headline-lg text-primary text-sm font-bold tracking-widest">COMMAND</h2>
+<div class="font-data-mono text-data-mono text-[10px] text-outline">V3.2 Active</div>
+</div>
+</div>
+</div>
+<div class="flex-1 px-4 space-y-1 font-data-mono text-data-mono">
+<!-- Active Tab: Overview (fallback for general analytics focus if specific one isn't present, but let's assume Overview is contextually sound) -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT bg-primary-container/10 text-primary-container border-r-2 border-primary-container group transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span>Overview</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT text-outline hover:text-on-surface transition-all hover:bg-surface-container-high/50 group transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">sensors</span>
+<span>Live Sensors</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT text-outline hover:text-on-surface transition-all hover:bg-surface-container-high/50 group transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">warning</span>
+<span>Risk Models</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT text-outline hover:text-on-surface transition-all hover:bg-surface-container-high/50 group transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">emergency_share</span>
+<span>Evacuation</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT text-outline hover:text-on-surface transition-all hover:bg-surface-container-high/50 group transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span>Archive</span>
+</a>
+</div>
+<div class="px-6 mt-auto mb-6">
+<button class="w-full py-3 bg-primary-container text-absolute-black font-label-caps text-label-caps font-bold rounded-DEFAULT hover:bg-primary transition-colors drop-shadow-glow-cyan active:scale-95">
+                    DEPLOY RESPONSE
+                </button>
+</div>
+<div class="px-4 space-y-1 font-data-mono text-data-mono border-t border-outline-variant/20 pt-4 bg-surface-container-low">
+<a class="flex items-center gap-3 px-4 py-2 rounded-DEFAULT text-outline hover:text-on-surface transition-all hover:bg-surface-container-high/50" href="#">
+<span class="material-symbols-outlined text-sm">settings</span>
+<span class="text-xs">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-DEFAULT text-outline hover:text-on-surface transition-all hover:bg-surface-container-high/50" href="#">
+<span class="material-symbols-outlined text-sm">help</span>
+<span class="text-xs">Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-64 p-margin-mobile md:p-margin-desktop bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-surface-container-highest/20 via-absolute-black to-absolute-black min-h-screen">
+<!-- Page Header -->
+<header class="mb-8">
+<div class="flex justify-between items-end">
+<div>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary drop-shadow-glow-cyan flex items-center gap-3">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">water_drop</span>
+                            RAINFALL ANALYTICS
+                        </h1>
+<p class="font-data-mono text-data-mono text-outline mt-2 flex items-center gap-2 uppercase">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse-slow"></span>
+                            Live Feed // Chennai Sector // Aug 16-21
+                        </p>
+</div>
+<div class="hidden lg:flex items-center gap-4 bg-surface-container-low border border-outline-variant/30 px-4 py-2 rounded-DEFAULT backdrop-blur-md">
+<span class="material-symbols-outlined text-primary-container">satellite_alt</span>
+<div>
+<div class="font-label-caps text-label-caps text-primary-container text-[10px]">DATA SOURCE</div>
+<div class="font-data-mono text-data-mono text-on-surface font-bold">NASA IMERG LATE</div>
+</div>
+</div>
+</div>
+</header>
+<!-- Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Main Chart Panel (Spans 8 cols) -->
+<section class="lg:col-span-8 bg-surface-container-low border border-outline-variant/30 rounded-lg p-6 backdrop-blur-xl relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-primary-container/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+<div class="flex justify-between items-center mb-6 relative z-10">
+<h2 class="font-label-caps text-label-caps text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">show_chart</span>
+                            PRECIPITATION PROFILE
+                        </h2>
+<div class="flex gap-4 font-data-mono text-data-mono text-xs">
+<div class="flex items-center gap-2"><span class="w-3 h-1 bg-primary-container drop-shadow-glow-cyan"></span> Observed (mm/hr)</div>
+<div class="flex items-center gap-2"><span class="w-3 h-1 bg-secondary drop-shadow-glow-cyan"></span> Cumulative (mm)</div>
+</div>
+</div>
+<!-- Faux Chart Container -->
+<div class="w-full h-80 relative z-10">
+<!-- Chart Grid lines -->
+<svg class="absolute inset-0 pointer-events-none" height="100%" width="100%" xmlns="http://www.w3.org/2000/svg">
+<pattern height="20%" id="grid" patternunits="userSpaceOnUse" width="10%">
+<path class="chart-grid-line" d="M 100 0 L 0 0 0 100" fill="none"></path>
+</pattern>
+<rect fill="url(#grid)" height="100%" width="100%"></rect>
+<!-- X Axis Labels (Simulated) -->
+<text fill="#849495" font-family="JetBrains Mono" font-size="10" x="5%" y="98%">AUG 16</text>
+<text fill="#849495" font-family="JetBrains Mono" font-size="10" x="25%" y="98%">AUG 17</text>
+<text fill="#849495" font-family="JetBrains Mono" font-size="10" x="45%" y="98%">AUG 18</text>
+<text fill="#849495" font-family="JetBrains Mono" font-size="10" x="65%" y="98%">AUG 19</text>
+<text fill="#849495" font-family="JetBrains Mono" font-size="10" x="85%" y="98%">AUG 20</text>
+<!-- Glowing Data Line 1 (Observed) -->
+<path class="chart-path-glow" d="M 0 250 Q 50 240, 100 200 T 200 150 T 300 280 T 400 50 T 500 120 T 600 290 T 700 300" fill="none" stroke="#00f2ff" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+<!-- Glowing Data Line 2 (Cumulative) -->
+<path class="chart-path-glow" d="M 0 280 L 100 260 L 200 200 L 300 190 L 400 90 L 500 60 L 600 50 L 700 40" fill="none" stroke="#ebb2ff" stroke-dasharray="4 4" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+<!-- Peak Indicator -->
+<circle class="chart-path-glow" cx="400" cy="50" fill="#000" r="4" stroke="#00f2ff" stroke-width="2"></circle>
+<line opacity="0.5" stroke="#00f2ff" stroke-dasharray="2 2" stroke-width="1" x1="400" x2="400" y1="50" y2="300"></line>
+<text class="drop-shadow-glow-cyan" fill="#00f2ff" font-family="JetBrains Mono" font-size="12" font-weight="bold" x="410" y="45">142 mm/hr</text>
+</svg>
+</div>
+</section>
+<!-- Right Side Panel (Spans 4 cols) -->
+<div class="lg:col-span-4 flex flex-col gap-gutter">
+<!-- Intensity Heatmap -->
+<section class="bg-surface-container-low border border-outline-variant/30 rounded-lg p-1 backdrop-blur-xl relative overflow-hidden h-64 box-shadow-glow-cyan">
+<div class="absolute top-4 left-4 z-10 bg-absolute-black/80 px-3 py-1 border border-outline-variant/50 rounded-DEFAULT backdrop-blur-md">
+<span class="font-label-caps text-label-caps text-on-surface text-[10px]">INTENSITY MAP</span>
+</div>
+<!-- Satellite Heatmap Image -->
+<div class="w-full h-full rounded-DEFAULT overflow-hidden relative">
+<img alt="Satellite Precipitation Heatmap" class="w-full h-full object-cover opacity-80 mix-blend-screen" data-alt="A high-contrast, futuristic satellite weather map centered on a coastal city (Chennai). The map features a deep absolute black ocean and dark charcoal landmasses. Overlaying the city is a vibrant, glowing heatmap simulating intense precipitation, using electric cyan, bright magenta, and stark white to indicate severe weather cell cores. The visual style is highly technical and analytical." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjeZsOZ4ASOSwcAsu842iGF92vi2mkGGkGe4SagrYavekUe_7ez5eYp1WzFS1nhc6GPP_GvrYJO6bTfcmeYFHZcuXDpMl3XvjCjlHf2ZY1zxQQfkzNJ3ZKLo12l07dUn-JxIOdtfG_F-i_5fAVjdoEj1yYnEErpklpk17sqSAVWVw6cNPmUqTg1HbAzjC7cyf4JIGo442sIqR2jRf3qZD4konbEhmatyG_WeuqQFqNn-6Aj0i3puae"/>
+<!-- Grid Overlay -->
+<div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHBhdGggZD0iTTE5LjUgMEwxOS41IDIwTTAgMTkuNUwyMCAxOS41IiBzdHJva2U9InJnYmEoMTMyLCAxNDgsIDE0OSwgMC4xKSIgZmlsbD0ibm9uZSIvPjwvc3ZnPg==')] pointer-events-none"></div>
+<!-- Target Reticle -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 border border-primary-container rounded-full opacity-70 drop-shadow-glow-cyan flex items-center justify-center pointer-events-none">
+<div class="w-1 h-1 bg-primary-container rounded-full"></div>
+<div class="absolute w-full h-[1px] bg-primary-container/50"></div>
+<div class="absolute h-full w-[1px] bg-primary-container/50"></div>
+</div>
+</div>
+</section>
+<!-- Key Metrics Bento -->
+<section class="grid grid-cols-2 gap-4 flex-1">
+<!-- Metric 1 -->
+<div class="bg-surface-container-low border border-outline-variant/30 rounded-lg p-4 backdrop-blur-md flex flex-col justify-center">
+<div class="font-label-caps text-label-caps text-outline mb-1">TOTAL ACCUMULATION</div>
+<div class="font-display-lg text-display-lg text-primary drop-shadow-glow-cyan">
+                                485<span class="text-lg text-outline">mm</span>
+</div>
+</div>
+<!-- Metric 2 -->
+<div class="bg-surface-container-low border border-outline-variant/30 rounded-lg p-4 backdrop-blur-md flex flex-col justify-center">
+<div class="font-label-caps text-label-caps text-outline mb-1">RETURN PERIOD</div>
+<div class="font-display-lg text-display-lg text-secondary drop-shadow-glow-cyan">
+                                1/50<span class="text-lg text-outline">YR</span>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Lower Section: Satellite Status -->
+<div class="mt-gutter">
+<div class="aurora-divider mb-6"></div>
+<section class="bg-surface-container-low border border-outline-variant/30 rounded-lg p-6 backdrop-blur-xl flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="flex items-center gap-6">
+<!-- Radar/Constellation Viz -->
+<div class="relative w-16 h-16 rounded-full border border-outline-variant/50 flex items-center justify-center bg-surface-container-lowest overflow-hidden">
+<div class="absolute inset-0 bg-primary-container/10 rounded-full animate-ping opacity-20"></div>
+<div class="w-full h-[1px] bg-outline-variant/50 absolute top-1/2"></div>
+<div class="h-full w-[1px] bg-outline-variant/50 absolute left-1/2"></div>
+<div class="w-2 h-2 bg-primary-container rounded-full drop-shadow-glow-cyan absolute top-4 left-10"></div>
+<div class="w-1.5 h-1.5 bg-secondary rounded-full absolute bottom-4 left-4 opacity-70"></div>
+<span class="material-symbols-outlined text-outline-variant text-xl z-10">satellite</span>
+</div>
+<div>
+<h3 class="font-data-mono text-data-mono text-on-surface mb-1">CONSTELLATION STATUS</h3>
+<div class="flex gap-2">
+<span class="bg-primary-container/20 text-primary-container px-2 py-0.5 rounded-sm font-label-caps text-label-caps text-[10px] border border-primary-container/50">GPM CORE: OPTIMAL</span>
+<span class="bg-surface-container-high text-outline px-2 py-0.5 rounded-sm font-label-caps text-label-caps text-[10px] border border-outline-variant">NOAA-20: SYNCED</span>
+</div>
+</div>
+</div>
+<button class="px-6 py-2 border border-primary-container text-primary-container font-label-caps text-label-caps rounded-DEFAULT hover:bg-primary-container/10 transition-colors drop-shadow-glow-cyan flex items-center gap-2 group">
+<span class="material-symbols-outlined text-sm group-hover:rotate-180 transition-transform duration-500">sync</span>
+                        FORCE REFRESH
+                    </button>
+</section>
+</div>
+</main>
+</div>
+<!-- Footer (JSON Injected) -->
+<footer class="w-full py-8 border-t border-outline-variant/10 bg-absolute-black bg-surface-container-lowest flex flex-col md:flex-row justify-between items-center px-margin-desktop gap-4 z-50 relative">
+<div class="font-label-caps text-on-surface font-bold tracking-widest text-sm">HYDROCAST</div>
+<div class="font-data-mono text-label-caps text-outline text-[10px] tracking-wider text-center">
+            © 2024 HYDROCAST INTELLIGENCE. DATA SOURCE: NASA IMERG LATE RUN.
+        </div>
+<div class="flex gap-6 font-data-mono text-label-caps text-[10px]">
+<a class="text-outline hover:text-on-surface hover:underline decoration-primary-container opacity-80 hover:opacity-100 transition-opacity" href="#">Privacy</a>
+<a class="text-outline hover:text-on-surface hover:underline decoration-primary-container opacity-80 hover:opacity-100 transition-opacity" href="#">Protocol</a>
+<a class="text-outline hover:text-on-surface hover:underline decoration-primary-container opacity-80 hover:opacity-100 transition-opacity" href="#">Terminal</a>
+<a class="text-outline hover:text-on-surface hover:underline decoration-primary-container opacity-80 hover:opacity-100 transition-opacity" href="#">API</a>
+</div>
+</footer>
+</body></html>

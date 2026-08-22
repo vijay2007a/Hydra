@@ -1,0 +1,36 @@
+# Environment and secret configuration
+.env
+.env.*
+.env.local
+firebase-key.json
+*firebase*.json
+*adminsdk*.json
+service-account*.json
+credentials*.json
+secrets/
+*.key
+*.pem
+
+# Dependencies
+node_modules/
+dist/
+build/
+.vercel
+
+# Python cache & virtual environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+env/
+.env/
+
+# Logs & temp files
+*.log
+scratch/
+.DS_Store
+Thumbs.db
+
+

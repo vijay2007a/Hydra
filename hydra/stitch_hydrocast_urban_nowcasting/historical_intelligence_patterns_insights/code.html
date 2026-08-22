@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HYDROCAST - Historical Analysis</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&amp;family=JetBrains+Mono:wght@500;600&amp;family=Inter:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#252a31",
+                        "outline": "#849495",
+                        "on-secondary-fixed": "#320047",
+                        "inverse-on-surface": "#2b3138",
+                        "on-secondary-fixed-variant": "#74009f",
+                        "on-tertiary-container": "#af009d",
+                        "on-tertiary-fixed-variant": "#840076",
+                        "absolute-black": "#000000",
+                        "on-tertiary": "#5e0053",
+                        "surface-tint": "#00dbe7",
+                        "on-primary-fixed-variant": "#004f54",
+                        "tertiary-fixed": "#ffd7f0",
+                        "error": "#ffb4ab",
+                        "secondary-container": "#ce5dff",
+                        "primary-fixed-dim": "#00dbe7",
+                        "surface-container-lowest": "#090f15",
+                        "secondary": "#ebb2ff",
+                        "surface-bright": "#343a41",
+                        "tertiary-container": "#ffccee",
+                        "glow-cyan": "rgba(0, 242, 255, 0.4)",
+                        "secondary-fixed-dim": "#ebb2ff",
+                        "error-container": "#93000a",
+                        "warning-orange": "#ffaa00",
+                        "on-background": "#dde3ec",
+                        "on-secondary": "#520071",
+                        "outline-variant": "#3a494b",
+                        "primary-container": "#00f2ff",
+                        "surface-container": "#1a2027",
+                        "primary-fixed": "#74f5ff",
+                        "surface": "#0e141a",
+                        "on-surface-variant": "#b9cacb",
+                        "on-error": "#690005",
+                        "on-secondary-container": "#480064",
+                        "on-primary-fixed": "#002022",
+                        "background": "#0e141a",
+                        "on-primary": "#00363a",
+                        "primary": "#e1fdff",
+                        "inverse-primary": "#00696f",
+                        "glass-surface": "rgba(5, 10, 16, 0.7)",
+                        "tertiary": "#fff5f8",
+                        "tertiary-fixed-dim": "#fface8",
+                        "surface-container-highest": "#2f353c",
+                        "on-error-container": "#ffdad6",
+                        "secondary-fixed": "#f8d8ff",
+                        "inverse-surface": "#dde3ec",
+                        "on-primary-container": "#006a71",
+                        "on-tertiary-fixed": "#3a0033",
+                        "on-surface": "#dde3ec",
+                        "surface-variant": "#2f353c",
+                        "surface-container-low": "#161c23",
+                        "surface-dim": "#0e141a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "glass-padding": "24px",
+                        "unit": "4px",
+                        "gutter": "20px",
+                        "margin-desktop": "40px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "data-mono": ["JetBrains Mono"],
+                        "headline-lg": ["Sora"],
+                        "label-caps": ["JetBrains Mono"],
+                        "headline-lg-mobile": ["Sora"],
+                        "display-lg": ["Sora"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.04em", "fontWeight": "800" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .grid-bg {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(132, 148, 149, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(132, 148, 149, 0.05) 1px, transparent 1px);
+        }
+        .glow-border {
+            position: relative;
+        }
+        .glow-border::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px; right: -1px; bottom: -1px;
+            background: linear-gradient(45deg, rgba(0,242,255,0.2), transparent, rgba(206,93,255,0.2));
+            z-index: -1;
+            border-radius: inherit;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-x-hidden grid-bg">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-glass-surface backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_0_20px_rgba(0,219,231,0.15)] flex justify-between items-center px-margin-desktop py-4 w-full">
+<div class="font-display-lg text-headline-lg tracking-tighter text-primary-container drop-shadow-glow-cyan">HYDROCAST</div>
+<nav class="hidden md:flex gap-8">
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:scale-95" href="#">Home</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:scale-95" href="#">Command</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:scale-95" href="#">Map</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:scale-95" href="#">Predict</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:scale-95" href="#">Rainfall</a>
+<a class="font-label-caps text-label-caps text-primary-container border-b-2 border-primary-container pb-1 drop-shadow-glow-cyan cursor-pointer active:scale-95" href="#">Archive</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:bg-surface-bright/20 transition-all duration-300 p-2 rounded-full">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-bright/20 transition-all duration-300 p-2 rounded-full">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<img alt="Operator Profile" class="w-8 h-8 rounded-full border border-outline-variant/50" data-alt="A futuristic UI profile avatar depicting a highly stylized operator icon in deep navy and electric cyan tones. Professional, sharp, cinematic command center aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhXskCmusiII6XQ45d33KeRT1gMH5fZoPyF89dYcNx4ABgSytPZcUWUH0v2TG75WgAzo97eVzke7A7CtyP2i-q0ExOEF3beNuQuZMvhZ4N5glsq1ac8ovTcV7Jkjza0zAKigQSJTsPvZx0NVwOczBEkkXHXt1i5w9PbdIWCgUwmjcAqHlYBuN3BhciLbCLvYTRr6ZpXnXg7CJjbbSzRNyLW9QXSUIwXpJqo_CUt_eYEAa7SphJmyk8"/>
+</div>
+</header>
+<div class="flex pt-[88px] min-h-screen">
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col h-[calc(100vh-88px)] w-64 bg-surface-container-lowest/80 backdrop-blur-2xl border-r border-outline-variant/20 shadow-2xl py-glass-padding fixed left-0 top-[88px]">
+<div class="px-6 mb-8">
+<div class="font-data-mono text-label-caps text-primary-fixed-dim opacity-70 mb-1">COMMAND</div>
+<div class="font-headline-lg text-primary text-xl">V3.2 Active</div>
+</div>
+<nav class="flex-1 px-4 space-y-2">
+<a class="flex items-center gap-4 px-4 py-3 rounded-DEFAULT font-data-mono text-data-mono text-outline hover:text-on-surface hover:bg-surface-container-high/50 transition-all group duration-200" href="#">
+<span class="material-symbols-outlined opacity-70 group-hover:opacity-100 transition-opacity" data-icon="dashboard">dashboard</span>
+<span>Overview</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-DEFAULT font-data-mono text-data-mono text-outline hover:text-on-surface hover:bg-surface-container-high/50 transition-all group duration-200" href="#">
+<span class="material-symbols-outlined opacity-70 group-hover:opacity-100 transition-opacity" data-icon="sensors">sensors</span>
+<span>Live Sensors</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-DEFAULT font-data-mono text-data-mono text-outline hover:text-on-surface hover:bg-surface-container-high/50 transition-all group duration-200" href="#">
+<span class="material-symbols-outlined opacity-70 group-hover:opacity-100 transition-opacity" data-icon="warning">warning</span>
+<span>Risk Models</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-DEFAULT font-data-mono text-data-mono text-outline hover:text-on-surface hover:bg-surface-container-high/50 transition-all group duration-200" href="#">
+<span class="material-symbols-outlined opacity-70 group-hover:opacity-100 transition-opacity" data-icon="emergency_share">emergency_share</span>
+<span>Evacuation</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-DEFAULT font-data-mono text-data-mono bg-primary-container/10 text-primary-container border-r-2 border-primary-container transition-all group duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span>Archive</span>
+</a>
+</nav>
+<div class="px-4 mt-auto space-y-4">
+<button class="w-full py-3 bg-primary-container text-absolute-black font-label-caps text-label-caps font-bold tracking-widest rounded-DEFAULT hover:bg-primary-fixed transition-colors shadow-[0_0_15px_rgba(0,242,255,0.3)]">
+                    DEPLOY RESPONSE
+                </button>
+<div class="flex justify-around border-t border-outline-variant/20 pt-4">
+<a class="text-outline hover:text-primary-container transition-colors p-2" href="#"><span class="material-symbols-outlined" data-icon="settings">settings</span></a>
+<a class="text-outline hover:text-primary-container transition-colors p-2" href="#"><span class="material-symbols-outlined" data-icon="help">help</span></a>
+</div>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="flex-1 md:ml-64 p-margin-mobile md:p-margin-desktop">
+<!-- Header Section -->
+<div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-primary mb-2">HISTORICAL ANALYSIS</h1>
+<p class="font-data-mono text-data-mono text-on-surface-variant max-w-2xl">Pattern recognition and model validation module. Reviewing past topological anomalies to refine predictive algorithms.</p>
+</div>
+<div class="flex items-center gap-3 bg-surface-container-low p-1 border border-outline-variant/30 rounded-full">
+<button class="px-4 py-2 rounded-full font-label-caps text-label-caps bg-surface-bright/50 text-on-surface">2021</button>
+<button class="px-4 py-2 rounded-full font-label-caps text-label-caps text-outline hover:text-on-surface">2022</button>
+<button class="px-4 py-2 rounded-full font-label-caps text-label-caps text-outline hover:text-on-surface">2023</button>
+</div>
+</div>
+<!-- Dashboard Grid -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Comparison View (Span 12) -->
+<div class="col-span-1 md:col-span-12 bg-absolute-black/40 backdrop-blur-xl border border-outline-variant/30 rounded-lg p-6 glow-border">
+<div class="flex justify-between items-center mb-4">
+<h2 class="font-label-caps text-label-caps text-primary-container">EVENT COMPARISON: AUG 2021 VS CURRENT MODEL</h2>
+<span class="material-symbols-outlined text-outline" data-icon="compare">compare</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-96">
+<!-- 2021 Event -->
+<div class="relative rounded-md overflow-hidden border border-outline-variant/50 group">
+<div class="bg-cover bg-center w-full h-full opacity-70 group-hover:opacity-100 transition-opacity duration-500" data-alt="A highly detailed satellite thermal heat map showing historical flood inundation zones from August 2021 over an urban grid. Cinematic deep space navy base with glowing cyan and magenta data overlays." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDiUh9qCHPNVTwA0AGKGlOMSwTtdOWTHapQR7Sk_x-BimOdtte3SNW-da4vLZf3aLo8tUkY-qoW9gnExhDa6xy0kQKqQ3jpC_-LKnpNF-igjggeAB9LIi15N7OBG76ukmSEpFzzJIsUX28QHhx1h7ywzxOfiqnH_5BIcwQe_7C-9d73koPBruZ7AOOENDElhmB5PYywpsqminV7axB4pFrdCpgknD5U28_fbn7Eccx1WBgQDszw-Hrj')"></div>
+<div class="absolute top-4 left-4 bg-absolute-black/80 px-3 py-1 rounded font-data-mono text-data-mono text-secondary-container border border-secondary-container/50">AUG 2021 EVENT</div>
+</div>
+<!-- Current Model -->
+<div class="relative rounded-md overflow-hidden border border-outline-variant/50 group">
+<div class="bg-cover bg-center w-full h-full opacity-70 group-hover:opacity-100 transition-opacity duration-500" data-alt="A predictive digital twin map showing current flood risk models over the same urban grid. High contrast cyber-command aesthetic with precise electric cyan contour lines indicating expected water levels." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCqQhS8CqQktUD0GcNGWudWSqbCPZdIP42ean57WoU43_rOB7BUKkZyg_IcGm4euGQDSKUoTTAevg7rjvEQUoE0zO8JOh07NC27Nfa2mtBVkie-pub2jLQNZIne1GbU3r7g4_P_zBnZLSdaURnltdoISfsMYc1-TQgdtl3-5MEaRsnkxEKAfRqmcM6DNPnKnz4yE81xGDU3ing-JuLPS5KZuePV5hh6pxqAPnQulF1bIg2yOZcXSmAq')"></div>
+<div class="absolute top-4 left-4 bg-absolute-black/80 px-3 py-1 rounded font-data-mono text-data-mono text-primary-container border border-primary-container/50">CURRENT PREDICTION</div>
+</div>
+</div>
+<!-- Timeline Slider -->
+<div class="mt-6 pt-6 border-t border-outline-variant/20">
+<div class="flex justify-between font-data-mono text-[10px] text-outline mb-2">
+<span>T-48H</span>
+<span>PEAK</span>
+<span>T+48H</span>
+</div>
+<input class="w-full accent-primary-container h-1 bg-surface-container-highest rounded-full appearance-none cursor-pointer" max="100" min="0" type="range" value="50"/>
+</div>
+</div>
+<!-- Insights: Rainfall vs Inundation (Span 8) -->
+<div class="col-span-1 md:col-span-8 bg-surface-container-low/60 backdrop-blur-md border border-outline-variant/20 rounded-lg p-6">
+<h3 class="font-label-caps text-label-caps text-secondary-container mb-6">RAINFALL VS INUNDATION PATTERNS</h3>
+<div class="h-64 flex items-end justify-between gap-2 px-2 relative">
+<!-- Abstract Chart Bars -->
+<div class="w-full bg-surface-container-highest absolute bottom-0 h-px"></div>
+<div class="w-1/12 bg-primary-container/20 hover:bg-primary-container/40 h-[20%] border-t border-primary-container transition-all"></div>
+<div class="w-1/12 bg-secondary-container/20 hover:bg-secondary-container/40 h-[35%] border-t border-secondary-container transition-all"></div>
+<div class="w-1/12 bg-primary-container/20 hover:bg-primary-container/40 h-[45%] border-t border-primary-container transition-all"></div>
+<div class="w-1/12 bg-secondary-container/20 hover:bg-secondary-container/40 h-[80%] border-t border-secondary-container transition-all relative">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 font-data-mono text-data-mono text-warning-orange">PEAK</div>
+</div>
+<div class="w-1/12 bg-primary-container/20 hover:bg-primary-container/40 h-[60%] border-t border-primary-container transition-all"></div>
+<div class="w-1/12 bg-secondary-container/20 hover:bg-secondary-container/40 h-[40%] border-t border-secondary-container transition-all"></div>
+<div class="w-1/12 bg-primary-container/20 hover:bg-primary-container/40 h-[25%] border-t border-primary-container transition-all"></div>
+</div>
+<div class="flex justify-between mt-4 font-data-mono text-xs text-outline">
+<span>DAY 1</span>
+<span>DAY 2</span>
+<span>DAY 3</span>
+</div>
+</div>
+<!-- Drainage Efficiency (Span 4) -->
+<div class="col-span-1 md:col-span-4 bg-surface-container-low/60 backdrop-blur-md border border-outline-variant/20 rounded-lg p-6 flex flex-col">
+<h3 class="font-label-caps text-label-caps text-outline mb-6">HISTORICAL DRAINAGE EFFICIENCY</h3>
+<div class="flex-1 flex flex-col justify-center gap-6">
+<div>
+<div class="flex justify-between font-data-mono text-data-mono mb-1">
+<span class="text-on-surface-variant">SECTOR ALPHA</span>
+<span class="text-error">42%</span>
+</div>
+<div class="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-error w-[42%]"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-data-mono text-data-mono mb-1">
+<span class="text-on-surface-variant">SECTOR BETA</span>
+<span class="text-warning-orange">68%</span>
+</div>
+<div class="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-warning-orange w-[68%]"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-data-mono text-data-mono mb-1">
+<span class="text-on-surface-variant">SECTOR GAMMA</span>
+<span class="text-primary-container">94%</span>
+</div>
+<div class="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary-container w-[94%]"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Footer -->
+<footer class="w-full py-8 border-t border-outline-variant/10 bg-absolute-black md:ml-64 flex flex-col md:flex-row justify-between items-center px-margin-desktop gap-4 z-40 relative">
+<div class="font-data-mono text-label-caps text-outline">
+            © 2024 HYDROCAST INTELLIGENCE. DATA SOURCE: NASA IMERG LATE RUN.
+        </div>
+<div class="flex gap-6 font-label-caps text-on-surface">
+<a class="text-outline hover:text-on-surface hover:underline decoration-primary-container transition-opacity opacity-80 hover:opacity-100" href="#">Privacy</a>
+<a class="text-outline hover:text-on-surface hover:underline decoration-primary-container transition-opacity opacity-80 hover:opacity-100" href="#">Protocol</a>
+<a class="text-outline hover:text-on-surface hover:underline decoration-primary-container transition-opacity opacity-80 hover:opacity-100" href="#">Terminal</a>
+<a class="text-outline hover:text-on-surface hover:underline decoration-primary-container transition-opacity opacity-80 hover:opacity-100" href="#">API</a>
+</div>
+</footer>
+</body></html>

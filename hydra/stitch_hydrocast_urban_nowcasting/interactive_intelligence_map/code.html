@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hydrocast | Interactive Flood Map</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Sora:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-high": "#252a31",
+                      "outline": "#849495",
+                      "on-secondary-fixed": "#320047",
+                      "inverse-on-surface": "#2b3138",
+                      "on-secondary-fixed-variant": "#74009f",
+                      "on-tertiary-container": "#af009d",
+                      "on-tertiary-fixed-variant": "#840076",
+                      "absolute-black": "#000000",
+                      "on-tertiary": "#5e0053",
+                      "surface-tint": "#00dbe7",
+                      "on-primary-fixed-variant": "#004f54",
+                      "tertiary-fixed": "#ffd7f0",
+                      "error": "#ffb4ab",
+                      "secondary-container": "#ce5dff",
+                      "primary-fixed-dim": "#00dbe7",
+                      "surface-container-lowest": "#090f15",
+                      "secondary": "#ebb2ff",
+                      "surface-bright": "#343a41",
+                      "tertiary-container": "#ffccee",
+                      "glow-cyan": "rgba(0, 242, 255, 0.4)",
+                      "secondary-fixed-dim": "#ebb2ff",
+                      "error-container": "#93000a",
+                      "warning-orange": "#ffaa00",
+                      "on-background": "#dde3ec",
+                      "on-secondary": "#520071",
+                      "outline-variant": "#3a494b",
+                      "primary-container": "#00f2ff",
+                      "surface-container": "#1a2027",
+                      "primary-fixed": "#74f5ff",
+                      "surface": "#0e141a",
+                      "on-surface-variant": "#b9cacb",
+                      "on-error": "#690005",
+                      "on-secondary-container": "#480064",
+                      "on-primary-fixed": "#002022",
+                      "background": "#0e141a",
+                      "on-primary": "#00363a",
+                      "primary": "#e1fdff",
+                      "inverse-primary": "#00696f",
+                      "glass-surface": "rgba(5, 10, 16, 0.7)",
+                      "tertiary": "#fff5f8",
+                      "tertiary-fixed-dim": "#fface8",
+                      "surface-container-highest": "#2f353c",
+                      "on-error-container": "#ffdad6",
+                      "secondary-fixed": "#f8d8ff",
+                      "inverse-surface": "#dde3ec",
+                      "on-primary-container": "#006a71",
+                      "on-tertiary-fixed": "#3a0033",
+                      "on-surface": "#dde3ec",
+                      "surface-variant": "#2f353c",
+                      "surface-container-low": "#161c23",
+                      "surface-dim": "#0e141a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "glass-padding": "24px",
+                      "unit": "4px",
+                      "gutter": "20px",
+                      "margin-desktop": "40px",
+                      "margin-mobile": "16px"
+              },
+              "fontFamily": {
+                      "data-mono": ["JetBrains Mono"],
+                      "headline-lg": ["Sora"],
+                      "label-caps": ["JetBrains Mono"],
+                      "headline-lg-mobile": ["Sora"],
+                      "display-lg": ["Sora"],
+                      "body-lg": ["Inter"],
+                      "body-md": ["Inter"]
+              },
+              "fontSize": {
+                      "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.04em", "fontWeight": "800"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "400"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        /* Custom scrollbar for cyber aesthetic */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #000000; }
+        ::-webkit-scrollbar-thumb { background: #3a494b; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00f2ff; box-shadow: 0 0 10px rgba(0,242,255,0.5); }
+        
+        /* Ambient map pulse */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            80% { transform: scale(2.5); opacity: 0; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+        .map-pulse::before {
+            content: '';
+            position: absolute;
+            inset: -50%;
+            border: 1px solid #ffb4ab;
+            border-radius: 50%;
+            animation: pulse-ring 3s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+    </style>
+</head>
+<body class="bg-absolute-black text-on-surface h-screen w-full overflow-hidden flex flex-col font-body-md selection:bg-primary-container selection:text-absolute-black">
+<!-- TopNavBar (Shared Component) -->
+<header class="fixed top-0 w-full z-50 border-b border-outline-variant/30 bg-glass-surface backdrop-blur-xl shadow-[0_0_20px_rgba(0,219,231,0.15)] flex justify-between items-center px-margin-desktop py-4 h-[72px]">
+<!-- Brand -->
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary-container text-3xl" style="font-variation-settings: 'FILL' 1;">water_drop</span>
+<span class="font-display-lg text-[24px] tracking-tighter text-primary-container drop-shadow-glow-cyan leading-none">HYDROCAST</span>
+</div>
+<!-- Navigation Links (Desktop) -->
+<nav class="hidden md:flex items-center gap-8 font-label-caps text-label-caps">
+<a class="text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-bright/20 transition-all duration-300 px-3 py-2 rounded-DEFAULT cursor-pointer active:scale-95" href="#">Home</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-bright/20 transition-all duration-300 px-3 py-2 rounded-DEFAULT cursor-pointer active:scale-95" href="#">Command</a>
+<a class="text-primary-container border-b-2 border-primary-container pb-1 drop-shadow-glow-cyan hover:bg-surface-bright/20 transition-all duration-300 px-3 cursor-pointer active:scale-95" href="#">Map</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-bright/20 transition-all duration-300 px-3 py-2 rounded-DEFAULT cursor-pointer active:scale-95" href="#">Predict</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-bright/20 transition-all duration-300 px-3 py-2 rounded-DEFAULT cursor-pointer active:scale-95" href="#">Rainfall</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-bright/20 transition-all duration-300 px-3 py-2 rounded-DEFAULT cursor-pointer active:scale-95" href="#">Alerts</a>
+</nav>
+<!-- Search & Actions -->
+<div class="flex items-center gap-6">
+<!-- Search Bar (on_right) -->
+<div class="relative hidden lg:block group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant group-focus-within:text-primary-container transition-colors">search</span>
+<input class="bg-absolute-black border border-outline-variant/50 text-on-surface font-data-mono text-data-mono rounded-full pl-10 pr-4 py-1.5 focus:outline-none focus:border-primary-container focus:shadow-[0_0_10px_rgba(0,242,255,0.3)] transition-all w-64" placeholder="Search coordinates..." type="text"/>
+</div>
+<div class="flex items-center gap-3">
+<button aria-label="Settings" class="text-on-surface-variant hover:text-primary-container transition-colors cursor-pointer active:scale-95 p-2 rounded-full hover:bg-surface-bright/20">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<button aria-label="Notifications" class="text-on-surface-variant hover:text-primary-container transition-colors cursor-pointer active:scale-95 p-2 rounded-full hover:bg-surface-bright/20 relative">
+<span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full shadow-[0_0_8px_rgba(255,180,171,0.8)]"></span>
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full border border-primary-container overflow-hidden ml-2 shadow-[0_0_10px_rgba(0,242,255,0.2)]">
+<img alt="Operator Profile" class="w-full h-full object-cover" data-alt="A futuristic avatar portrait of a cyber-command operator, bathed in dim neon cyan and deep space navy lighting. The portrait is high-contrast, professional, and cinematic, fitting a high-tech intelligence interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRPikP9Zk-g61ganSQ_coO-HlQx4tQxTV6y0vYAzGaEMx5pOAeIaiKrxpNkTD0gF3JhgFL4LUNXTe-wjMcl-90sR31lLhlj0sRpe9XUp4e4yMZFSSz8LJ1KWnEnDn858LrW6vB6b3YoIkAuxhPzVQ-3vDFqe-MdT4i03jvax51qnT9vqWmVMQU9Lk4y0ZSWCAeEs-1AAP2d9GMQmgrPwcr_ZPWZwB3j9SVPD227TKqi53s03g1Flk4"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Map Canvas -->
+<main class="relative flex-1 mt-[72px] w-full h-[calc(100vh-72px)] overflow-hidden">
+<!-- Geospatial Background Layer -->
+<div class="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-[20000ms] ease-linear hover:scale-105" data-alt="A highly detailed, cinematic top-down satellite view of a sprawling cyber-city at night, overlaid with vivid neon glowing cyan and magenta data visualizations representing flood paths and risk zones. The map features an absolute black background with luminous electric blue water bodies and sharp, stark red areas indicating critical risk. The overall aesthetic is a high-tech, futuristic cyber-command center, evoking a sense of mission-critical geospatial intelligence." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDPea8llB5_enLFYGtqVx23ZTYt_V2tCv4kNOMyx8_gYe-TuEj_LzVwWTIbyASo-576CuWQpd49bPjIoBFPSKpeWK5C7HzC4ht9Pp3Q61xx0vBjkpt7YcLbNyNOieyD28ROL7b3N9OTaiS_CaIINTwpzXx_ACP-d8kqFLj4N1rfJY2_hURiHcoRK1wq_Y8X-qiJLHjkk8XKpBJkSARIWq3BR1aBJYpokHC8CzXZTFmI2DuZ8Qi01Lyd')">
+<!-- Ambient Vignette -->
+<div class="absolute inset-0 bg-radial-gradient from-transparent via-absolute-black/40 to-absolute-black/90 pointer-events-none"></div>
+<!-- Simulated Map Risk Marker (Visual flavor) -->
+<div class="absolute top-[45%] left-[60%] w-4 h-4 bg-error rounded-full map-pulse shadow-[0_0_20px_rgba(255,180,171,0.8)] pointer-events-none z-10">
+<div class="absolute -top-8 -left-6 bg-error-container/80 backdrop-blur border border-error text-error font-data-mono text-[10px] px-2 py-0.5 rounded whitespace-nowrap uppercase">Crit: Zone A12</div>
+</div>
+<!-- Simulated Map Water Marker -->
+<div class="absolute top-[60%] left-[30%] w-3 h-3 bg-primary-container rounded-full shadow-[0_0_15px_rgba(0,242,255,0.8)] pointer-events-none z-10 opacity-70">
+<div class="absolute -top-6 -left-4 text-primary-container font-data-mono text-[10px] whitespace-nowrap opacity-70">Drain_Sys_04</div>
+</div>
+</div>
+<!-- UI Overlays (Pointer events none on container, auto on interactive elements) -->
+<div class="absolute inset-0 z-20 pointer-events-none flex justify-between p-gutter">
+<!-- Left Panel: Controls & Layers -->
+<aside class="w-80 flex flex-col gap-gutter pointer-events-auto">
+<!-- Search Inputs Card -->
+<div class="bg-surface-container-lowest/80 backdrop-blur-xl border border-outline-variant/30 rounded-xl p-6 shadow-2xl relative overflow-hidden group">
+<!-- Scanning border effect pseudo-element -->
+<div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary-container to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 -translate-x-full group-hover:translate-x-full ease-in-out"></div>
+<h2 class="font-headline-lg-mobile text-on-surface mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-fixed-dim">my_location</span>
+                        Locate Target
+                    </h2>
+<div class="flex flex-col gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant text-sm">search</span>
+<input class="w-full bg-absolute-black border border-outline-variant/50 text-on-surface font-data-mono text-data-mono rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-primary-container focus:shadow-[0_0_15px_rgba(0,242,255,0.2)] transition-all" placeholder="Search location..." type="text"/>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant text-sm">water</span>
+<input class="w-full bg-absolute-black border border-outline-variant/50 text-on-surface font-data-mono text-data-mono rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-primary-container focus:shadow-[0_0_15px_rgba(0,242,255,0.2)] transition-all" placeholder="Search drainage sys..." type="text"/>
+</div>
+</div>
+</div>
+<!-- Layer Switcher Card -->
+<div class="bg-surface-container-lowest/80 backdrop-blur-xl border border-outline-variant/30 rounded-xl p-6 shadow-2xl flex-1 flex flex-col">
+<div class="flex justify-between items-center mb-6">
+<h2 class="font-headline-lg-mobile text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-fixed-dim">layers</span>
+                            Telemetry Layers
+                        </h2>
+<span class="font-data-mono text-label-caps text-outline bg-surface-container-high px-2 py-1 rounded">5 ACTIVE</span>
+</div>
+<div class="flex flex-col gap-3">
+<!-- Layer Toggle Item (Active) -->
+<label class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low border border-outline-variant/20 cursor-pointer hover:bg-surface-bright/20 hover:border-primary-container/50 transition-all group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-container group-hover:drop-shadow-glow-cyan transition-all">rainy</span>
+<span class="font-data-mono text-on-surface">Rainfall Data</span>
+</div>
+<div class="relative w-10 h-5 bg-primary-container/20 rounded-full border border-primary-container/50">
+<div class="absolute right-1 top-0.5 w-4 h-4 bg-primary-container rounded-full shadow-[0_0_8px_rgba(0,242,255,0.8)]"></div>
+</div>
+</label>
+<!-- Layer Toggle Item (Active / Risk) -->
+<label class="flex items-center justify-between p-3 rounded-lg bg-error-container/10 border border-error/30 cursor-pointer hover:bg-error-container/20 transition-all group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-error shadow-error">warning</span>
+<span class="font-data-mono text-error">Critical Risk Zones</span>
+</div>
+<div class="relative w-10 h-5 bg-error/20 rounded-full border border-error/50">
+<div class="absolute right-1 top-0.5 w-4 h-4 bg-error rounded-full shadow-[0_0_8px_rgba(255,180,171,0.8)]"></div>
+</div>
+</label>
+<!-- Layer Toggle Item (Active) -->
+<label class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low border border-outline-variant/20 cursor-pointer hover:bg-surface-bright/20 hover:border-primary-container/50 transition-all group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-container group-hover:drop-shadow-glow-cyan transition-all">account_tree</span>
+<span class="font-data-mono text-on-surface">Drainage Network</span>
+</div>
+<div class="relative w-10 h-5 bg-primary-container/20 rounded-full border border-primary-container/50">
+<div class="absolute right-1 top-0.5 w-4 h-4 bg-primary-container rounded-full shadow-[0_0_8px_rgba(0,242,255,0.8)]"></div>
+</div>
+</label>
+<!-- Layer Toggle Item (Active) -->
+<label class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low border border-outline-variant/20 cursor-pointer hover:bg-surface-bright/20 hover:border-primary-container/50 transition-all group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-container group-hover:drop-shadow-glow-cyan transition-all">water</span>
+<span class="font-data-mono text-on-surface">Water Bodies</span>
+</div>
+<div class="relative w-10 h-5 bg-primary-container/20 rounded-full border border-primary-container/50">
+<div class="absolute right-1 top-0.5 w-4 h-4 bg-primary-container rounded-full shadow-[0_0_8px_rgba(0,242,255,0.8)]"></div>
+</div>
+</label>
+<!-- Layer Toggle Item (Inactive) -->
+<label class="flex items-center justify-between p-3 rounded-lg bg-absolute-black border border-outline-variant/20 cursor-pointer hover:bg-surface-bright/20 transition-all group opacity-60 hover:opacity-100">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-outline">history</span>
+<span class="font-data-mono text-outline group-hover:text-on-surface">Historical Overlay</span>
+</div>
+<div class="relative w-10 h-5 bg-surface-container-high rounded-full border border-outline-variant/50">
+<div class="absolute left-1 top-0.5 w-4 h-4 bg-outline rounded-full"></div>
+</div>
+</label>
+</div>
+</div>
+</aside>
+<!-- Right Panel: Selected Area Details -->
+<aside class="w-96 flex flex-col pointer-events-auto self-start">
+<div class="bg-surface-container-lowest/80 backdrop-blur-xl border border-outline-variant/30 rounded-xl shadow-2xl overflow-hidden">
+<!-- Header -->
+<div class="p-6 border-b border-outline-variant/30 bg-gradient-to-b from-error-container/20 to-transparent">
+<div class="flex justify-between items-start mb-2">
+<div class="font-label-caps text-error bg-error/10 px-2 py-1 rounded border border-error/30 tracking-widest inline-flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-error animate-pulse"></span>
+                                ACTIVE TARGET
+                            </div>
+<button class="text-outline hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-sm">close</span>
+</button>
+</div>
+<h1 class="font-headline-lg text-on-surface">Zone A12</h1>
+<p class="font-data-mono text-outline mt-1 text-sm">Coordinates: 34.0522° N, 118.2437° W</p>
+</div>
+<!-- Telemetry Data -->
+<div class="p-6 flex flex-col gap-6">
+<!-- Primary Metric -->
+<div class="flex flex-col gap-1">
+<span class="font-data-mono text-label-caps text-outline">FLOOD PROBABILITY</span>
+<div class="flex items-baseline gap-2">
+<span class="font-display-lg text-error drop-shadow-[0_0_15px_rgba(255,180,171,0.5)]">87%</span>
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">trending_up</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full h-1.5 bg-surface-container-highest rounded-full mt-2 overflow-hidden">
+<div class="h-full bg-error shadow-[0_0_10px_rgba(255,180,171,1)]" style="width: 87%;"></div>
+</div>
+</div>
+<div class="h-[1px] w-full bg-gradient-to-r from-transparent via-outline-variant/50 to-transparent"></div>
+<!-- Secondary Metric -->
+<div class="flex flex-col gap-1">
+<span class="font-data-mono text-label-caps text-outline">EXPECTED ONSET</span>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-lg text-warning-orange drop-shadow-[0_0_10px_rgba(255,170,0,0.5)]">35</span>
+<span class="font-data-mono text-outline">mins</span>
+</div>
+</div>
+<!-- Tertiary Metrics Grid -->
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container-low p-3 rounded border border-outline-variant/20">
+<span class="block font-data-mono text-label-caps text-outline mb-1">RAINFALL RATE</span>
+<span class="font-data-mono text-on-surface text-lg">42 <span class="text-xs text-outline">mm/h</span></span>
+</div>
+<div class="bg-surface-container-low p-3 rounded border border-outline-variant/20">
+<span class="block font-data-mono text-label-caps text-outline mb-1">DRAIN CAP</span>
+<span class="font-data-mono text-error text-lg">94% <span class="text-xs text-outline">FULL</span></span>
+</div>
+</div>
+<!-- CTA -->
+<button class="w-full mt-2 bg-error text-absolute-black font-label-caps py-3 rounded hover:bg-error/90 hover:shadow-[0_0_20px_rgba(255,180,171,0.4)] transition-all active:scale-95 flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-sm">emergency_share</span>
+                            INITIATE EVAC PROTOCOL
+                        </button>
+</div>
+</div>
+<!-- Map Controls (Zoom/Pan) -->
+<div class="mt-4 flex justify-end gap-2">
+<div class="bg-surface-container-lowest/80 backdrop-blur-xl border border-outline-variant/30 rounded-lg shadow-lg flex overflow-hidden">
+<button class="p-2 text-outline hover:text-primary-container hover:bg-surface-bright/50 transition-colors border-r border-outline-variant/30">
+<span class="material-symbols-outlined text-xl">add</span>
+</button>
+<button class="p-2 text-outline hover:text-primary-container hover:bg-surface-bright/50 transition-colors">
+<span class="material-symbols-outlined text-xl">remove</span>
+</button>
+</div>
+</div>
+</aside>
+</div>
+<!-- Bottom Panel: Time Slider -->
+<div class="absolute bottom-gutter left-1/2 -translate-x-1/2 w-full max-w-4xl z-20 pointer-events-auto px-gutter">
+<div class="bg-surface-container-lowest/90 backdrop-blur-2xl border border-outline-variant/40 rounded-xl p-4 shadow-[0_20px_40px_rgba(0,0,0,0.8)] flex flex-col gap-2">
+<div class="flex justify-between items-end px-2">
+<span class="font-data-mono text-label-caps text-outline">LAST 24H</span>
+<div class="font-data-mono text-primary-container bg-primary-container/10 px-3 py-1 rounded border border-primary-container/30 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+                        LIVE: T-0
+                    </div>
+<span class="font-data-mono text-label-caps text-outline">FORECAST +12H</span>
+</div>
+<!-- Custom Timeline Scrubber -->
+<div class="relative w-full h-12 flex items-center group cursor-pointer px-2">
+<!-- Base track -->
+<div class="absolute left-2 right-2 h-1 bg-surface-container-high rounded-full overflow-hidden">
+<!-- Filled track -->
+<div class="h-full bg-primary-container/30 w-[66%]"></div>
+</div>
+<!-- Markers -->
+<div class="absolute left-2 w-[2px] h-3 bg-outline top-1/2 -translate-y-1/2"></div>
+<div class="absolute left-1/4 w-[1px] h-2 bg-outline-variant top-1/2 -translate-y-1/2"></div>
+<div class="absolute left-1/2 w-[1px] h-2 bg-outline-variant top-1/2 -translate-y-1/2"></div>
+<div class="absolute right-2 w-[2px] h-3 bg-outline top-1/2 -translate-y-1/2"></div>
+<!-- The Scrubber Handle (at T-0) -->
+<div class="absolute left-[66%] -translate-x-1/2 w-4 h-8 bg-primary-container rounded-sm shadow-[0_0_15px_rgba(0,242,255,0.8)] border border-primary z-10 group-hover:scale-110 transition-transform flex items-center justify-center">
+<div class="w-[1px] h-4 bg-absolute-black"></div>
+</div>
+</div>
+<div class="flex justify-between px-2 text-[10px] font-data-mono text-outline-variant">
+<span>-24h</span>
+<span>-12h</span>
+<span class="text-primary-container pl-16">NOW</span>
+<span>+6h</span>
+<span>+12h</span>
+</div>
+</div>
+</div>
+</main>
+</body></html>

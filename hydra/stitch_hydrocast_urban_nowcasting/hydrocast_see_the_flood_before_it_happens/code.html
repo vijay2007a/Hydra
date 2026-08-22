@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HydroCast Intelligence - Predictive Flood Analysis</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Sora:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-high": "#252a31",
+                      "outline": "#849495",
+                      "on-secondary-fixed": "#320047",
+                      "inverse-on-surface": "#2b3138",
+                      "on-secondary-fixed-variant": "#74009f",
+                      "on-tertiary-container": "#af009d",
+                      "on-tertiary-fixed-variant": "#840076",
+                      "absolute-black": "#000000",
+                      "on-tertiary": "#5e0053",
+                      "surface-tint": "#00dbe7",
+                      "on-primary-fixed-variant": "#004f54",
+                      "tertiary-fixed": "#ffd7f0",
+                      "error": "#ffb4ab",
+                      "secondary-container": "#ce5dff",
+                      "primary-fixed-dim": "#00dbe7",
+                      "surface-container-lowest": "#090f15",
+                      "secondary": "#ebb2ff",
+                      "surface-bright": "#343a41",
+                      "tertiary-container": "#ffccee",
+                      "glow-cyan": "rgba(0, 242, 255, 0.4)",
+                      "secondary-fixed-dim": "#ebb2ff",
+                      "error-container": "#93000a",
+                      "warning-orange": "#ffaa00",
+                      "on-background": "#dde3ec",
+                      "on-secondary": "#520071",
+                      "outline-variant": "#3a494b",
+                      "primary-container": "#00f2ff",
+                      "surface-container": "#1a2027",
+                      "primary-fixed": "#74f5ff",
+                      "surface": "#0e141a",
+                      "on-surface-variant": "#b9cacb",
+                      "on-error": "#690005",
+                      "on-secondary-container": "#480064",
+                      "on-primary-fixed": "#002022",
+                      "background": "#0e141a",
+                      "on-primary": "#00363a",
+                      "primary": "#e1fdff",
+                      "inverse-primary": "#00696f",
+                      "glass-surface": "rgba(5, 10, 16, 0.7)",
+                      "tertiary": "#fff5f8",
+                      "tertiary-fixed-dim": "#fface8",
+                      "surface-container-highest": "#2f353c",
+                      "on-error-container": "#ffdad6",
+                      "secondary-fixed": "#f8d8ff",
+                      "inverse-surface": "#dde3ec",
+                      "on-primary-container": "#006a71",
+                      "on-tertiary-fixed": "#3a0033",
+                      "on-surface": "#dde3ec",
+                      "surface-variant": "#2f353c",
+                      "surface-container-low": "#161c23",
+                      "surface-dim": "#0e141a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "glass-padding": "24px",
+                      "unit": "4px",
+                      "gutter": "20px",
+                      "margin-desktop": "40px",
+                      "margin-mobile": "16px"
+              },
+              "fontFamily": {
+                      "data-mono": [
+                              "JetBrains Mono", "monospace"
+                      ],
+                      "headline-lg": [
+                              "Sora", "sans-serif"
+                      ],
+                      "label-caps": [
+                              "JetBrains Mono", "monospace"
+                      ],
+                      "headline-lg-mobile": [
+                              "Sora", "sans-serif"
+                      ],
+                      "display-lg": [
+                              "Sora", "sans-serif"
+                      ],
+                      "body-lg": [
+                              "Inter", "sans-serif"
+                      ],
+                      "body-md": [
+                              "Inter", "sans-serif"
+                      ]
+              },
+              "fontSize": {
+                      "data-mono": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.04em",
+                                      "fontWeight": "800"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .cyber-glow { box-shadow: 0 0 20px rgba(0, 242, 255, 0.4); }
+        .cyber-glow-intense { box-shadow: 0 0 40px rgba(0, 242, 255, 0.6); }
+        .text-glow { text-shadow: 0 0 20px rgba(0, 242, 255, 0.5); }
+        .cyber-border {
+            position: relative;
+        }
+        .cyber-border::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0,242,255,0.8), transparent);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            animation: scan-border 4s linear infinite;
+        }
+        @keyframes scan-border {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .pulse-dot {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+        
+        .reveal-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .reveal-on-scroll.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Ambient Aurora */
+        .aurora-bg {
+            background: radial-gradient(circle at 20% 30%, rgba(0, 242, 255, 0.15) 0%, transparent 40%),
+                        radial-gradient(circle at 80% 70%, rgba(206, 93, 255, 0.1) 0%, transparent 40%);
+            z-index: -1;
+        }
+        
+        /* Grid Background */
+        .cyber-grid {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(132, 148, 149, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(132, 148, 149, 0.05) 1px, transparent 1px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top Navigation from Shared Components -->
+<nav class="fixed top-0 w-full z-50 bg-glass-surface backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_0_20px_rgba(0,219,231,0.15)]">
+<div class="flex justify-between items-center px-margin-desktop py-4 w-full">
+<div class="flex items-center gap-8">
+<span class="font-display-lg text-headline-lg tracking-tighter text-primary-container drop-shadow-glow-cyan">HYDROCAST</span>
+<div class="hidden md:flex gap-6 items-center">
+<a class="text-primary-container border-b-2 border-primary-container pb-1 drop-shadow-glow-cyan font-label-caps text-label-caps cursor-pointer active:scale-95 hover:bg-surface-bright/20 transition-all duration-300" href="#">Home</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 hover:bg-surface-bright/20 transition-all duration-300" href="#">Command</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 hover:bg-surface-bright/20 transition-all duration-300" href="#">Map</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 hover:bg-surface-bright/20 transition-all duration-300" href="#">Predict</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 hover:bg-surface-bright/20 transition-all duration-300" href="#">Rainfall</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 hover:bg-surface-bright/20 transition-all duration-300" href="#">Alerts</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary">settings</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary">notifications</span>
+<img alt="Operator Profile" class="w-8 h-8 rounded-full border border-outline-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB94jLLqElCVHq2jLCseYf7EOwfKbJY6QTvyH-vsW1FKgyCo90ZtvgjVlvZ9rR2-7TiDJ6mHqMZw2CfQvESZ-v34-clvpgblhgJCFkTYo2i3rY5qtGVQgZdPP74N6U-eSuezUzFUFEJqtInnDPYvyr8tTYDSPzRykko68-0MTnaVnSFtNAzyGVPSGDaOa3X4c04BnyhTpiNeAF691YyYOmtLKF6Z-meVG81yM3_k2E01eYuRDLR00ez"/>
+</div>
+</div>
+</nav>
+<!-- Hero Section -->
+<header class="relative min-h-screen flex items-center justify-center pt-24 overflow-hidden isolate">
+<!-- Shader Background -->
+<!-- STITCH_SHADER_START:ANIMATION_4 class="absolute inset-0 w-full h-full -z-20" -->
+<div class="absolute inset-0 w-full h-full -z-20" style="display:block;">
+<canvas id="shader-canvas-ANIMATION_4" style="display:block;width:100%;height:100%"></canvas>
+<script>
+(function() {
+  const canvas = document.getElementById('shader-canvas-ANIMATION_4');
+
+  // Sync the WebGL drawing-buffer size with the CSS-driven layout size.
+  // This fires on initial layout and whenever the element is resized.
+  function syncSize() {
+    const w = canvas.clientWidth  || 1280;
+    const h = canvas.clientHeight || 720;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width  = w;
+      canvas.height = h;
+    }
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(syncSize).observe(canvas);
+  }
+  syncSize();
+
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 a_position;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+  const fs = `precision highp float;
+varying vec2 v_texCoord;
+uniform float u_time;
+uniform vec2 u_resolution;
+
+void main() {
+    vec2 uv = v_texCoord;
+    float time = u_time * 0.2;
+    
+    // Background deep navy
+    vec3 color = vec3(0.02, 0.04, 0.08);
+    
+    // Aurora-like flow
+    float noise1 = sin(uv.x * 3.0 + time) * 0.5 + 0.5;
+    float noise2 = cos(uv.y * 2.0 - time * 0.8) * 0.5 + 0.5;
+    
+    vec3 cyan = vec3(0.0, 0.95, 1.0);
+    vec3 purple = vec3(0.7, 0.0, 1.0);
+    
+    float mask = smoothstep(0.4, 0.6, noise1 * noise2);
+    color = mix(color, cyan * 0.2, mask);
+    color = mix(color, purple * 0.15, 1.0 - mask);
+    
+    // Grid pattern
+    vec2 grid = fract(uv * 40.0);
+    float line = step(0.98, grid.x) + step(0.98, grid.y);
+    color += line * cyan * 0.05;
+    
+    // Subtle scanlines
+    float scan = sin(uv.y * 400.0 + u_time * 5.0) * 0.02;
+    color += scan;
+
+    gl_FragColor = vec4(color, 1.0);
+}`;
+  function cs(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const pos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uRes = gl.getUniformLocation(prog, 'u_resolution');
+  const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+
+  // u_mouse is in pixel coordinates matching u_resolution (ShaderToy convention).
+  // Shaders that need normalized coords should use: u_mouse / u_resolution.
+  let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+  window.addEventListener('mousemove', (event) => {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width && rect.height) {
+      const nx = (event.clientX - rect.left) / rect.width;
+      const ny = 1.0 - (event.clientY - rect.top) / rect.height;
+      mouse.x = nx * canvas.width;
+      mouse.y = ny * canvas.height;
+    }
+  });
+
+  function render(t) {
+    if (typeof ResizeObserver === 'undefined') syncSize();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (uTime) gl.uniform1f(uTime, t * 0.001);
+    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+    if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render(0);
+})();
+</script>
+</div>
+<!-- STITCH_SHADER_END:ANIMATION_4 -->
+<!-- Ambient Gradient Overlay -->
+<div class="absolute inset-0 bg-gradient-to-b from-absolute-black/40 via-surface/80 to-background -z-10"></div>
+<div class="absolute inset-0 aurora-bg -z-10"></div>
+<div class="absolute inset-0 cyber-grid -z-10"></div>
+<div class="relative z-10 container mx-auto px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-12 gap-gutter items-center mt-12 md:mt-0">
+<!-- Hero Content -->
+<div class="md:col-span-8 flex flex-col items-start gap-6">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded bg-error-container/20 border border-error-container text-error font-label-caps text-label-caps">
+<span class="relative flex h-2 w-2 mr-1">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-error"></span>
+</span>
+                    SYSTEM ONLINE / REGION: CHENNAI
+                </div>
+<h1 class="font-display-lg text-[48px] md:text-display-lg text-primary text-glow leading-tight">
+                    SEE THE FLOOD <br/> BEFORE IT HAPPENS.
+                </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl border-l-2 border-primary-container pl-4">
+                    AI-powered urban flood intelligence combining satellite rainfall data, real-time monitoring and predictive risk analysis for Chennai.
+                </p>
+<div class="flex flex-wrap gap-4 mt-8">
+<button class="bg-primary-container text-absolute-black font-label-caps text-label-caps px-8 py-4 rounded hover:bg-primary transition-colors cyber-glow flex items-center gap-2">
+<span class="material-symbols-outlined">explore</span>
+                        Explore Live Intelligence
+                    </button>
+<button class="bg-glass-surface backdrop-blur-md border border-primary-container text-primary-container font-label-caps text-label-caps px-8 py-4 rounded hover:bg-primary-container/10 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined">map</span>
+                        View Flood Map
+                    </button>
+</div>
+</div>
+<!-- Floating Data Cards -->
+<div class="md:col-span-4 relative h-full flex flex-col justify-center gap-6 mt-12 md:mt-0">
+<div class="bg-glass-surface backdrop-blur-xl border border-outline-variant/30 rounded-lg p-6 shadow-2xl relative overflow-hidden cyber-border transform md:translate-x-12">
+<div class="absolute top-0 right-0 p-2 opacity-20">
+<span class="material-symbols-outlined text-6xl">water_drop</span>
+</div>
+<div class="flex justify-between items-start mb-4 relative z-10">
+<div class="font-label-caps text-label-caps text-on-surface-variant">Live Rainfall Intensity</div>
+<span class="material-symbols-outlined text-primary-container">satellite_alt</span>
+</div>
+<div class="flex items-baseline gap-2 relative z-10">
+<span class="font-headline-lg text-headline-lg text-primary">72</span>
+<span class="font-data-mono text-data-mono text-primary-container">mm/hr</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1 mt-4 rounded overflow-hidden">
+<div class="bg-primary-container h-full w-[72%] shadow-[0_0_10px_#00f2ff]"></div>
+</div>
+</div>
+<div class="bg-glass-surface backdrop-blur-xl border border-error-container/30 rounded-lg p-6 shadow-2xl relative overflow-hidden transform md:-translate-x-4">
+<div class="flex justify-between items-start mb-4 relative z-10">
+<div class="font-label-caps text-label-caps text-error">Alert Status</div>
+<div class="relative flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75 pulse-dot"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-error"></span>
+</div>
+</div>
+<div class="flex items-center gap-3 relative z-10">
+<span class="material-symbols-outlined text-error text-3xl">warning</span>
+<span class="font-headline-lg text-headline-lg-mobile text-error">ACTIVE</span>
+</div>
+<div class="font-data-mono text-data-mono text-on-surface-variant mt-2 text-xs">
+                        T-MINUS 04:22:10 TO CRITICAL LEVEL
+                    </div>
+</div>
+</div>
+</div>
+<!-- Scroll indicator -->
+<div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
+<span class="font-label-caps text-[10px] text-on-surface-variant tracking-[0.2em]">INITIATE PROTOCOL</span>
+<span class="material-symbols-outlined text-primary-container">keyboard_double_arrow_down</span>
+</div>
+</header>
+<main class="relative z-10 pb-32">
+<!-- Aurora Divider -->
+<div class="w-full h-px bg-gradient-to-r from-transparent via-primary-container/50 to-transparent my-16"></div>
+<!-- How HydroCast Works Section -->
+<section class="container mx-auto px-margin-mobile md:px-margin-desktop py-16 reveal-on-scroll">
+<div class="mb-12 text-center">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">INTELLIGENCE WORKFLOW</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-4 max-w-2xl mx-auto">From orbital sensors to actionable ground truth in milliseconds.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+<!-- Connecting Line (Desktop) -->
+<div class="hidden md:block absolute top-1/2 left-[10%] right-[10%] h-px bg-outline-variant/30 -z-10">
+<div class="h-full bg-primary-container/50 w-full animate-[scan-border_3s_linear_infinite]" style="background: linear-gradient(90deg, transparent, #00f2ff, transparent); background-size: 50% 100%;"></div>
+</div>
+<!-- Step 1 -->
+<div class="bg-surface-container-low border border-outline-variant/20 rounded-xl p-8 flex flex-col items-center text-center relative cyber-border group hover:bg-surface-container/50 transition-colors">
+<div class="w-16 h-16 rounded-full bg-surface-container-high border border-primary-container/30 flex items-center justify-center mb-6 group-hover:shadow-[0_0_15px_rgba(0,242,255,0.3)] transition-shadow">
+<span class="material-symbols-outlined text-primary-container text-3xl">satellite_alt</span>
+</div>
+<h3 class="font-label-caps text-label-caps text-primary mb-3">1. ORBITAL ACQUISITION</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Continuous ingestion of NASA IMERG Late Run multi-satellite precipitation data streams.</p>
+</div>
+<!-- Step 2 -->
+<div class="bg-surface-container-low border border-outline-variant/20 rounded-xl p-8 flex flex-col items-center text-center relative cyber-border group hover:bg-surface-container/50 transition-colors">
+<div class="w-16 h-16 rounded-full bg-surface-container-high border border-secondary-container/30 flex items-center justify-center mb-6 group-hover:shadow-[0_0_15px_rgba(206,93,255,0.3)] transition-shadow">
+<span class="material-symbols-outlined text-secondary-container text-3xl" style="font-variation-settings: 'FILL' 1;">neurology</span>
+</div>
+<h3 class="font-label-caps text-label-caps text-secondary mb-3">2. AI PROCESSING</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Geospatial neural networks process topological maps against live rainfall velocity to predict inundation.</p>
+</div>
+<!-- Step 3 -->
+<div class="bg-surface-container-low border border-outline-variant/20 rounded-xl p-8 flex flex-col items-center text-center relative cyber-border group hover:bg-surface-container/50 transition-colors">
+<div class="w-16 h-16 rounded-full bg-surface-container-high border border-error-container/30 flex items-center justify-center mb-6 group-hover:shadow-[0_0_15px_rgba(255,170,0,0.3)] transition-shadow">
+<span class="material-symbols-outlined text-warning-orange text-3xl" style="font-variation-settings: 'FILL' 1;">emergency_share</span>
+</div>
+<h3 class="font-label-caps text-label-caps text-warning-orange mb-3">3. TACTICAL DISSEMINATION</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Actionable risk maps and alerts routed to command centers and mobile operators instantly.</p>
+</div>
+</div>
+</section>
+<!-- Live Intelligence Preview Section (Bento Grid) -->
+<section class="container mx-auto px-margin-mobile md:px-margin-desktop py-16 reveal-on-scroll">
+<div class="mb-12 flex justify-between items-end">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">LIVE INTELLIGENCE</h2>
+<p class="font-data-mono text-data-mono text-primary-container mt-2">TERMINAL ACCESS: GRANTED</p>
+</div>
+<button class="hidden md:flex bg-transparent border border-outline-variant text-on-surface font-label-caps text-label-caps px-6 py-2 rounded hover:border-primary-container hover:text-primary-container transition-colors items-center gap-2">
+                    FULL DASHBOARD <span class="material-symbols-outlined text-sm">open_in_new</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Main Map Area -->
+<div class="md:col-span-8 bg-surface-container-lowest border border-outline-variant/20 rounded-xl overflow-hidden relative min-h-[400px]">
+<div class="absolute top-4 left-4 z-10 bg-glass-surface backdrop-blur-md border border-outline-variant/30 rounded px-3 py-1 font-data-mono text-[10px] text-primary-container flex items-center gap-2">
+<span class="w-2 h-2 bg-primary-container rounded-full animate-pulse"></span>
+                        LIVE SAT-LINK
+                    </div>
+<div class="w-full h-full bg-surface-container flex items-center justify-center relative">
+<div class="absolute inset-0 bg-cover bg-center opacity-60 mix-blend-screen grayscale-[20%] sepia-[10%] hue-rotate-[180deg]" data-alt="A highly detailed, futuristic digital map of Chennai, India, rendered in a dark-mode cyber aesthetic. The map shows urban grids in deep absolute black and navy blues, overlayed with glowing, heat-map style flood risk zones in vibrant electric cyan and warning magenta. High-contrast, intricate technical UI elements float above the terrain." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCYDXHyXg4VRzxH4P4s4I6ttTdizWoExI2E3U7Kw_VaC7kkpSTatSQuf5RkBj7jNt6-f0toDZtwrG_pH4XIt0zwitkI5_VqnbXBT5eWr4JugbFkEAhBI2hJkmb7r3WZtnDCAYVroYdkVc56nPS-e_0fQ_J6WzHPkUhTAtmqsV6ODs91C7hglD8hclB0uJVuPOId0Ck880IgwRRf-iBaewx6V1IulS6TVRW9Gb1VfzrEQ8YQI7yfCryw')"></div>
+<!-- Simulated Radar Sweep -->
+<div class="absolute inset-0 border-[0.5px] border-primary-container/20 rounded-full w-[800px] h-[800px] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20"></div>
+<div class="absolute inset-0 border-[0.5px] border-primary-container/20 rounded-full w-[600px] h-[600px] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-30"></div>
+</div>
+</div>
+<!-- Right Side Data Stack -->
+<div class="md:col-span-4 flex flex-col gap-gutter">
+<!-- Chart Card -->
+<div class="bg-surface-container-low border border-outline-variant/20 rounded-xl p-6 flex-1 flex flex-col">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-label-caps text-label-caps text-on-surface">VELOCITY TREND</h3>
+<span class="material-symbols-outlined text-outline-variant text-sm">timeline</span>
+</div>
+<div class="flex-1 flex items-end gap-1 mt-4 relative">
+<!-- Simulated Chart Bars -->
+<div class="w-full bg-primary-container/10 h-[20%] rounded-t hover:bg-primary-container/30 transition-colors"></div>
+<div class="w-full bg-primary-container/20 h-[35%] rounded-t hover:bg-primary-container/40 transition-colors"></div>
+<div class="w-full bg-primary-container/30 h-[45%] rounded-t hover:bg-primary-container/50 transition-colors"></div>
+<div class="w-full bg-primary-container/40 h-[60%] rounded-t hover:bg-primary-container/60 transition-colors"></div>
+<div class="w-full bg-error-container/60 h-[85%] rounded-t border-t border-error relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-error text-absolute-black font-data-mono text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">SPIKE</div>
+</div>
+<div class="w-full bg-primary-container/50 h-[70%] rounded-t hover:bg-primary-container/70 transition-colors"></div>
+<!-- Threshold line -->
+<div class="absolute top-[30%] w-full h-px bg-warning-orange/50 border-b border-dashed border-warning-orange/30"></div>
+</div>
+</div>
+<!-- Risk Areas List -->
+<div class="bg-surface-container-low border border-outline-variant/20 rounded-xl p-6 flex-1">
+<h3 class="font-label-caps text-label-caps text-on-surface mb-4">CRITICAL ZONES</h3>
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center p-2 rounded bg-error-container/10 border border-error-container/30 hover:bg-error-container/20 transition-colors cursor-pointer group">
+<div class="flex items-center gap-3">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span>
+<span class="font-data-mono text-data-mono text-on-surface">Velachery</span>
+</div>
+<span class="font-data-mono text-[10px] text-error">94% RISK</span>
+</div>
+<div class="flex justify-between items-center p-2 rounded bg-warning-orange/5 border border-warning-orange/20 hover:bg-warning-orange/10 transition-colors cursor-pointer">
+<div class="flex items-center gap-3">
+<span class="w-1.5 h-1.5 rounded-full bg-warning-orange"></span>
+<span class="font-data-mono text-data-mono text-on-surface">T Nagar</span>
+</div>
+<span class="font-data-mono text-[10px] text-warning-orange">72% RISK</span>
+</div>
+<div class="flex justify-between items-center p-2 rounded bg-surface-bright/20 border border-outline-variant/20 hover:bg-surface-bright/40 transition-colors cursor-pointer">
+<div class="flex items-center gap-3">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<span class="font-data-mono text-data-mono text-on-surface">Adyar</span>
+</div>
+<span class="font-data-mono text-[10px] text-primary-container">31% RISK</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<button class="md:hidden w-full mt-6 bg-surface-container-high border border-outline-variant text-on-surface font-label-caps text-label-caps px-6 py-3 rounded hover:border-primary-container hover:text-primary-container transition-colors flex items-center justify-center gap-2">
+                FULL DASHBOARD <span class="material-symbols-outlined text-sm">open_in_new</span>
+</button>
+</section>
+<!-- Aurora Divider -->
+<div class="w-full h-px bg-gradient-to-r from-transparent via-secondary-container/30 to-transparent my-16"></div>
+<!-- Technology Partner Section -->
+<section class="container mx-auto px-margin-mobile md:px-margin-desktop py-16 reveal-on-scroll">
+<div class="text-center mb-10">
+<h3 class="font-label-caps text-label-caps text-outline tracking-[0.2em]">POWERED BY ADVANCED TELEMETRY</h3>
+</div>
+<div class="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+<div class="flex flex-col items-center gap-2 group">
+<span class="material-symbols-outlined text-5xl text-on-surface group-hover:text-primary-container transition-colors">rocket_launch</span>
+<span class="font-data-mono text-[12px] text-outline group-hover:text-primary-container transition-colors">NASA IMERG</span>
+</div>
+<div class="flex flex-col items-center gap-2 group">
+<span class="material-symbols-outlined text-5xl text-on-surface group-hover:text-secondary-container transition-colors">memory</span>
+<span class="font-data-mono text-[12px] text-outline group-hover:text-secondary-container transition-colors">TENSOR FLOW AI</span>
+</div>
+<div class="flex flex-col items-center gap-2 group">
+<span class="material-symbols-outlined text-5xl text-on-surface group-hover:text-primary-container transition-colors">public</span>
+<span class="font-data-mono text-[12px] text-outline group-hover:text-primary-container transition-colors">GEO-SPATIAL API</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer from Shared Components -->
+<footer class="w-full py-8 border-t border-outline-variant/10 bg-absolute-black z-10 relative">
+<div class="flex flex-col md:flex-row justify-between items-center px-margin-desktop gap-4">
+<div class="font-data-mono text-label-caps text-outline opacity-80">
+                © 2024 HYDROCAST INTELLIGENCE. DATA SOURCE: NASA IMERG LATE RUN.
+            </div>
+<div class="flex gap-6">
+<a class="font-data-mono text-label-caps text-outline hover:text-on-surface hover:underline decoration-primary-container opacity-80 hover:opacity-100 transition-opacity" href="#">Privacy</a>
+<a class="font-data-mono text-label-caps text-outline hover:text-on-surface hover:underline decoration-primary-container opacity-80 hover:opacity-100 transition-opacity" href="#">Protocol</a>
+<a class="font-data-mono text-label-caps text-outline hover:text-on-surface hover:underline decoration-primary-container opacity-80 hover:opacity-100 transition-opacity" href="#">Terminal</a>
+<a class="font-data-mono text-label-caps text-outline hover:text-on-surface hover:underline decoration-primary-container opacity-80 hover:opacity-100 transition-opacity" href="#">API</a>
+</div>
+</div>
+</footer>
+<script>
+        // Simple scroll reveal logic
+        document.addEventListener("DOMContentLoaded", () => {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("is-visible");
+                    }
+                });
+            }, {
+                threshold: 0.1
+            });
+
+            document.querySelectorAll(".reveal-on-scroll").forEach((el) => {
+                observer.observe(el);
+            });
+        });
+    </script>
+</body></html>

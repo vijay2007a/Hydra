@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>About / Technology - Hydrocast Intelligence</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;700;800&amp;family=JetBrains+Mono:wght@500;600&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#252a31",
+                        "outline": "#849495",
+                        "on-secondary-fixed": "#320047",
+                        "inverse-on-surface": "#2b3138",
+                        "on-secondary-fixed-variant": "#74009f",
+                        "on-tertiary-container": "#af009d",
+                        "on-tertiary-fixed-variant": "#840076",
+                        "absolute-black": "#000000",
+                        "on-tertiary": "#5e0053",
+                        "surface-tint": "#00dbe7",
+                        "on-primary-fixed-variant": "#004f54",
+                        "tertiary-fixed": "#ffd7f0",
+                        "error": "#ffb4ab",
+                        "secondary-container": "#ce5dff",
+                        "primary-fixed-dim": "#00dbe7",
+                        "surface-container-lowest": "#090f15",
+                        "secondary": "#ebb2ff",
+                        "surface-bright": "#343a41",
+                        "tertiary-container": "#ffccee",
+                        "glow-cyan": "rgba(0, 242, 255, 0.4)",
+                        "secondary-fixed-dim": "#ebb2ff",
+                        "error-container": "#93000a",
+                        "warning-orange": "#ffaa00",
+                        "on-background": "#dde3ec",
+                        "on-secondary": "#520071",
+                        "outline-variant": "#3a494b",
+                        "primary-container": "#00f2ff",
+                        "surface-container": "#1a2027",
+                        "primary-fixed": "#74f5ff",
+                        "surface": "#0e141a",
+                        "on-surface-variant": "#b9cacb",
+                        "on-error": "#690005",
+                        "on-secondary-container": "#480064",
+                        "on-primary-fixed": "#002022",
+                        "background": "#0e141a",
+                        "on-primary": "#00363a",
+                        "primary": "#e1fdff",
+                        "inverse-primary": "#00696f",
+                        "glass-surface": "rgba(5, 10, 16, 0.7)",
+                        "tertiary": "#fff5f8",
+                        "tertiary-fixed-dim": "#fface8",
+                        "surface-container-highest": "#2f353c",
+                        "on-error-container": "#ffdad6",
+                        "secondary-fixed": "#f8d8ff",
+                        "inverse-surface": "#dde3ec",
+                        "on-primary-container": "#006a71",
+                        "on-tertiary-fixed": "#3a0033",
+                        "on-surface": "#dde3ec",
+                        "surface-variant": "#2f353c",
+                        "surface-container-low": "#161c23",
+                        "surface-dim": "#0e141a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "glass-padding": "24px",
+                        "unit": "4px",
+                        "gutter": "20px",
+                        "margin-desktop": "40px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "data-mono": ["JetBrains Mono", "monospace"],
+                        "headline-lg": ["Sora", "sans-serif"],
+                        "label-caps": ["JetBrains Mono", "monospace"],
+                        "headline-lg-mobile": ["Sora", "sans-serif"],
+                        "display-lg": ["Sora", "sans-serif"],
+                        "body-lg": ["Inter", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.04em", "fontWeight": "800" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #000000;
+            background-image: radial-gradient(circle at 50% 0%, rgba(0, 242, 255, 0.05) 0%, transparent 70%);
+            color: #dde3ec;
+        }
+        .aurora-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 219, 231, 0.5), transparent);
+        }
+        .scanning-border {
+            position: relative;
+        }
+        .scanning-border::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            border-radius: inherit;
+            pointer-events: none;
+            box-shadow: inset 0 0 10px rgba(0, 242, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+<!-- Top Navigation (Shell suppressed based on task focus, using simple anchor for internal page structure if needed, but per rules, if linear/transactional or dead end, hide shell. Assuming this is a content page, we keep the shell but mark it inactive) -->
+<!-- Assuming this sits logically under a global nav structure, maybe under an 'About' or 'Tech' tab not listed, or we suppress it. Let's suppress standard nav for focus on canvas as requested by UX Goal for 'focused journey'. We will provide a simplified header. -->
+<header class="fixed top-0 w-full z-50 bg-glass-surface backdrop-blur-xl border-b border-outline-variant/30 px-margin-desktop py-4 flex justify-between items-center shadow-[0_0_20px_rgba(0,219,231,0.15)] hidden md:flex">
+<div class="font-display-lg text-headline-lg tracking-tighter text-primary-container drop-shadow-glow-cyan">HYDROCAST</div>
+<nav class="flex gap-6">
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Home</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Command</a>
+<a class="font-label-caps text-label-caps text-primary-container border-b-2 border-primary-container pb-1 drop-shadow-glow-cyan cursor-pointer active:scale-95" href="#">About</a>
+</nav>
+</header>
+<main class="flex-grow pt-24 pb-20 px-margin-mobile md:px-margin-desktop flex flex-col gap-16 relative">
+<!-- Abstract Tech Background -->
+<div class="fixed inset-0 z-[-1] opacity-20 pointer-events-none" style="background-image: radial-gradient(circle at 80% 20%, rgba(116, 0, 159, 0.3) 0%, transparent 50%);"></div>
+<!-- Hero Section -->
+<section class="max-w-4xl mx-auto text-center pt-10">
+<h1 class="font-display-lg text-display-lg text-primary mb-4 drop-shadow-glow-cyan">INTELLIGENCE PIPELINE</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">Transparency in predictive modeling. Discover the journey from raw orbital telemetry to actionable evacuation alerts.</p>
+</section>
+<!-- Pipeline Diagram (Abstracted) -->
+<section class="w-full max-w-6xl mx-auto relative scanning-border bg-glass-surface backdrop-blur-xl rounded-xl p-glass-padding shadow-[0_0_20px_rgba(0,219,231,0.1)]">
+<div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center text-center relative z-10">
+<!-- Node 1 -->
+<div class="flex flex-col items-center gap-2 p-4">
+<span class="material-symbols-outlined text-4xl text-primary-container" style="font-variation-settings: 'FILL' 1;">satellite_alt</span>
+<span class="font-label-caps text-label-caps text-outline">SATELLITE</span>
+</div>
+<!-- Connector -->
+<div class="hidden md:block w-full h-[1px] bg-outline-variant relative">
+<div class="absolute inset-0 bg-primary-container w-1/2 animate-pulse shadow-[0_0_10px_rgba(0,242,255,0.8)]"></div>
+</div>
+<!-- Node 2 -->
+<div class="flex flex-col items-center gap-2 p-4">
+<span class="material-symbols-outlined text-4xl text-primary-container" style="font-variation-settings: 'FILL' 1;">cloud_sync</span>
+<span class="font-label-caps text-label-caps text-outline">PROCESSING</span>
+</div>
+<!-- Connector -->
+<div class="hidden md:block w-full h-[1px] bg-outline-variant relative">
+<div class="absolute inset-0 bg-primary-container w-1/2 animate-pulse shadow-[0_0_10px_rgba(0,242,255,0.8)]" style="animation-delay: 0.2s;"></div>
+</div>
+<!-- Node 3 -->
+<div class="flex flex-col items-center gap-2 p-4">
+<span class="material-symbols-outlined text-4xl text-error" style="font-variation-settings: 'FILL' 1;">warning</span>
+<span class="font-label-caps text-label-caps text-outline">PREDICTION</span>
+</div>
+</div>
+</section>
+<div class="aurora-divider w-full max-w-6xl mx-auto"></div>
+<!-- Bento Grid Content -->
+<section class="grid grid-cols-1 md:grid-cols-12 gap-gutter max-w-6xl mx-auto w-full">
+<!-- Mission Card (Col span 12 md 8) -->
+<div class="md:col-span-8 scanning-border bg-glass-surface backdrop-blur-xl rounded-xl p-glass-padding flex flex-col justify-center relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-9xl">memory</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-4">Our Mission</h2>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                    To eliminate the lag between meteorological event detection and ground-level response. By synthesizing NASA IMERG data with localized sensor networks, we provide a unified, predictive command matrix for critical infrastructure protection.
+                </p>
+</div>
+<!-- Stats/Tech Mini Card (Col span 12 md 4) -->
+<div class="md:col-span-4 scanning-border bg-surface-container-high/80 backdrop-blur-xl rounded-xl p-glass-padding flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-primary-fixed-dim">DATA INGESTION</span>
+<div class="mt-4">
+<div class="font-data-mono text-3xl text-primary-container mb-1">98.4<span class="text-sm">%</span></div>
+<div class="font-data-mono text-data-mono text-outline">ACCURACY CONFIDENCE</div>
+</div>
+<div class="w-full bg-surface-container-lowest h-1 mt-4 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full w-[98.4%] shadow-[0_0_10px_rgba(0,242,255,0.5)]"></div>
+</div>
+</div>
+<!-- Satellite Intelligence (Col span 12 md 6) -->
+<div class="md:col-span-6 scanning-border bg-glass-surface backdrop-blur-xl rounded-xl overflow-hidden group">
+<div class="h-48 w-full relative bg-surface-container-lowest">
+<img class="object-cover w-full h-full opacity-60 mix-blend-screen group-hover:opacity-80 transition-opacity" data-alt="A highly detailed, technical schematic illustration of a weather satellite in low earth orbit against a deep black space background, glowing with electric cyan energy lines. The style is cinematic, dark, high-contrast, fitting a modern cyber-command aesthetic with precise geometric vector lines." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvMxuUWdGrE94x7FwUN2DuNuTKwNtzAIpBfZ2lilUOdyzUKp8NDfQ9CMzGI__FUUKqqhRn_J29-HxtjI-zI_Bbc5uewq9CFTazOq-KlnAJqGC6DWbMm2W5VUq2IRGGg5N3J4Zv7cn2HA7i38c8haXTpl0dyBWX6Dtw8Wc6gmU8Ak1OG6TpjVamiXPnQdWVhDRd6EdraHrBJGj3XhUlb5FYSojHjK76BngK7yQYGck4cUJrSx5hm2uE"/>
+<div class="absolute inset-0 bg-gradient-to-t from-glass-surface to-transparent"></div>
+</div>
+<div class="p-glass-padding relative z-10">
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-2">Satellite Intelligence</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                        Leveraging the NASA IMERG late-run dataset, our models ingest global precipitation measurement metrics every 30 minutes, providing the baseline macro-view for regional hydrological forecasting.
+                    </p>
+</div>
+</div>
+<!-- Neural Risk Modeling (Col span 12 md 6) -->
+<div class="md:col-span-6 scanning-border bg-glass-surface backdrop-blur-xl rounded-xl overflow-hidden group">
+<div class="h-48 w-full relative bg-surface-container-lowest">
+<img class="object-cover w-full h-full opacity-60 mix-blend-screen group-hover:opacity-80 transition-opacity" data-alt="A macro view of a glowing, complex neural network visualization. Interconnected nodes emit vibrant magenta and cyan light against an absolute black background. The visual represents deep learning and complex data processing in a futuristic, cinematic cyber-intelligence command center style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUCoInTFgaNP_h30zef-AS0YZvvrPHcmGDaQFt7PWgBq5qAVUlIzw1qy7wgM4oNcapu0cdGMKUXM4iBOhsdt8C-Ee7sRO3hwDIu5HuHbWPjOiszJwAxX90QpAsZu_oJC_g5Hh_mag1fenDFUf1nJFx5JOh-4s1QqUBlaQ3cVsx1JgBS9HdMwncLH-dLghoGFWIEj1WqRVA9V77ozFEbuoHl33nObvz1375Qt518m6lR86Hbdh8DWhS"/>
+<div class="absolute inset-0 bg-gradient-to-t from-glass-surface to-transparent"></div>
+</div>
+<div class="p-glass-padding relative z-10">
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-2">Neural Risk Modeling</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                        Our proprietary edge-compute nodes analyze historical flood topographies against live saturation indices, identifying microscopic threshold breaches before they escalate into macro-events.
+                    </p>
+</div>
+</div>
+</section>
+<div class="aurora-divider w-full max-w-6xl mx-auto"></div>
+<!-- Responsible AI / Transparency -->
+<section class="max-w-4xl mx-auto text-center border border-outline-variant/30 rounded-xl p-8 bg-surface-container-lowest/50 backdrop-blur-md">
+<span class="material-symbols-outlined text-4xl text-warning-orange mb-4" style="font-variation-settings: 'FILL' 1;">security</span>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-4">Responsible Prediction &amp; Limitations</h3>
+<p class="font-body-md text-body-md text-outline-variant mb-6 text-left">
+                Hydrocast Intelligence is a decision-support tool, not a definitive oracle. Predictive confidence degrades beyond a 72-hour horizon. System latency is subject to orbital telemetry uplink schedules. All automated alerts must be verified against localized emergency service protocols.
+            </p>
+<div class="flex flex-wrap justify-center gap-4">
+<span class="px-3 py-1 rounded bg-surface-container-high text-on-surface-variant font-label-caps text-label-caps border border-outline-variant/50">DATA LATENCY: <span class="text-primary-container">~45 MIN</span></span>
+<span class="px-3 py-1 rounded bg-surface-container-high text-on-surface-variant font-label-caps text-label-caps border border-outline-variant/50">CONFIDENCE HORIZON: <span class="text-primary-container">72 HRS</span></span>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-8 border-t border-outline-variant/10 bg-absolute-black flex flex-col md:flex-row justify-between items-center px-margin-desktop gap-4">
+<div class="font-label-caps text-on-surface opacity-80">
+            © 2024 HYDROCAST INTELLIGENCE. DATA SOURCE: NASA IMERG LATE RUN.
+        </div>
+<div class="flex gap-4">
+<a class="font-data-mono text-label-caps text-outline hover:text-on-surface hover:underline decoration-primary-container transition-opacity opacity-80 hover:opacity-100" href="#">Privacy</a>
+<a class="font-data-mono text-label-caps text-outline hover:text-on-surface hover:underline decoration-primary-container transition-opacity opacity-80 hover:opacity-100" href="#">Protocol</a>
+<a class="font-data-mono text-label-caps text-outline hover:text-on-surface hover:underline decoration-primary-container transition-opacity opacity-80 hover:opacity-100" href="#">Terminal</a>
+<a class="font-data-mono text-label-caps text-outline hover:text-on-surface hover:underline decoration-primary-container transition-opacity opacity-80 hover:opacity-100" href="#">API</a>
+</div>
+</footer>
+</body></html>
