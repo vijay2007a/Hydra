@@ -18,8 +18,10 @@ load_dotenv(PROJECT_ROOT / ".env")
 # Firebase / Firestore configuration
 FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID", "hydra-1963e")
 FIREBASE_SERVICE_ACCOUNT_PATH = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH", r"C:\Users\vijay\secrets\firebase-key.json")
+FIREBASE_SERVICE_ACCOUNT_JSON = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
 FIRESTORE_WEATHER_COLLECTION = os.getenv("FIRESTORE_WEATHER_COLLECTION", "weather_snapshots")
 WEATHER_REFRESH_MINUTES = int(os.getenv("WEATHER_REFRESH_MINUTES", "15"))
+
 
 # Open-Meteo Coordinates for Chennai
 CHENNAI_WEATHER_COORDS = {
