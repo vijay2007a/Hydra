@@ -7,6 +7,7 @@ import { floodZonesGeoJSON } from '../../data/geo/floodZones';
 import { drainageNetworkGeoJSON } from '../../data/geo/drainageNetwork';
 import { sensorsGeoJSON } from '../../data/geo/sensors';
 import { waterBodiesGeoJSON } from '../../data/geo/waterBodies';
+import { api } from '../../services/api';
 
 // Controller component to handle external programmatic map commands and size sync
 const MapController = ({ zoomAction, flyToLocation, onMapClick }) => {
@@ -95,8 +96,7 @@ export const InteractiveGeoMap = ({
   const [liveDrains, setLiveDrains] = React.useState(null);
 
   React.useEffect(() => {
-    fetch('/api/drains?all_features=true')
-      .then(res => res.json())
+    api.getDrains({ all_features: true })
       .then(data => {
         if (data && data.features && data.features.length > 0) {
           console.log(`[HYDROCAST GIS] Loaded ${data.features.length} real GCC Storm Water Drain features.`);

@@ -2,8 +2,15 @@ import { mockIncidents, systemStatusMetrics } from '../data/incidents';
 import { mockPredictions, aiModelTelemetry } from '../data/predictions';
 import { mockRainfallData } from '../data/rainfall';
 import { mockFloodZones } from '../data/locations';
+const RENDER_BACKEND_URL = 'https://hydra-iwxj.onrender.com';
 
-const API_BASE = (import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/$/, '') : '') + '/api';
+// If VITE_API_URL is explicitly set, use it.
+// In production (e.g. Vercel deployment), fallback to the live Render backend URL.
+// In local development (Vite dev server), use relative '' so Vite proxies /api to 127.0.0.1:8000.
+const RAW_BASE_URL = import.meta.env.VITE_API_URL 
+  || (import.meta.env.PROD ? RENDER_BACKEND_URL : '');
+
+export const API_BASE = (RAW_BASE_URL ? RAW_BASE_URL.replace(/\/$/, '') : '') + '/api';
 
 // API Service Abstraction Layer connected to Live FastAPI Backend
 export const api = {
