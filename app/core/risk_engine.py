@@ -66,7 +66,7 @@ class RiskEngine:
         if loader.drains_gdf is None or len(loader.drains_gdf) == 0:
             return {"status": "error", "message": "GCC Drainage dataset is not loaded."}
 
-        if self.dist_waterways is None:
+        if self.dist_waterways is None or len(self.dist_waterways) != len(loader.drains_gdf):
             self.precalculate_spatial_indices()
 
         rainfall_proc = RainfallProcessor.get_instance()
@@ -110,7 +110,7 @@ class RiskEngine:
         levels = []
         risk_counts = {"LOW": 0, "MEDIUM": 0, "HIGH": 0, "VERY HIGH": 0}
 
-        for idx, row in gdf.iterrows():
+        for pos, (idx, row) in enumerate(gdf.iterrows()):
             # Drainage structural vulnerability & blockage
             status_val = str(row.get('status', 'Good')).strip().lower()
             if status_val in ['good', 'pucca']:
@@ -138,8 +138,8 @@ class RiskEngine:
             s_drain = min(100.0, s_status * 0.4 + s_obstacles + flow_penalty + s_dim * 0.3)
 
             # Hydrological Proximity Sub-score (S_hydro in [0, 100])
-            d_ww = self.dist_waterways.iloc[idx] if self.dist_waterways is not None else 1000.0
-            d_wb = self.dist_waterbodies.iloc[idx] if self.dist_waterbodies is not None else 1000.0
+            d_ww = self.dist_waterways.iloc[pos] if (self.dist_waterways is not None and pos < len(self.dist_waterways)) else 1000.0
+            d_wb = self.dist_waterbodies.iloc[pos] if (self.dist_waterbodies is not None and pos < len(self.dist_waterbodies)) else 1000.0
 
             s_ww = 100.0 if d_ww < 100 else (70.0 if d_ww < 500 else (40.0 if d_ww < 1500 else 10.0))
             s_wb = 100.0 if d_wb < 150 else (60.0 if d_wb < 600 else 15.0)

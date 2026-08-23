@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import WEATHER_REFRESH_MINUTES
+from app.config import WEATHER_REFRESH_MINUTES, PORT
 from app.core.data_loader import DataLoader
 from app.core.rainfall_processor import RainfallProcessor
 from app.core.risk_engine import RiskEngine
@@ -128,4 +128,4 @@ def root():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=PORT, reload=True)

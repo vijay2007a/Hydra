@@ -234,6 +234,10 @@ class WeatherService:
 
         return snapshot
 
+    def get_weather(self, force_refresh: bool = False) -> Dict[str, Any]:
+        """Convenience alias for get_latest_weather."""
+        return self.get_latest_weather(force_refresh=force_refresh)
+
     def get_weather_history(self, limit: int = 5) -> Dict[str, Any]:
         """
         Retrieves weather snapshot history from Firestore collection 'weather_snapshots'.

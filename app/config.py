@@ -1,27 +1,50 @@
 """
 Configuration and Dataset Auto-Discovery for HydroCast Backend.
 Recursively detects and dynamically configures dataset paths without requiring hardcoded paths.
-Loads environment variables for Firebase and external APIs.
+Loads environment variables for Firebase, Render deployment, and external APIs.
 """
 import os
 import glob
 from pathlib import Path
+from typing import Optional
 from dotenv import load_dotenv
 
 # Base directories
 APP_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = APP_DIR.parent
 
-# Load environment variables from .env file
+# Load environment variables from .env file (if present)
 load_dotenv(PROJECT_ROOT / ".env")
+
+# Server / Port configuration
+PORT = int(os.getenv("PORT", "8000"))
 
 # Firebase / Firestore configuration
 FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID", "hydra-1963e")
-FIREBASE_SERVICE_ACCOUNT_PATH = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH", r"C:\Users\vijay\secrets\firebase-key.json")
 FIREBASE_SERVICE_ACCOUNT_JSON = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+
+# Resolve service account path cross-platform (Render secret file vs local development)
+def resolve_service_account_path() -> Optional[str]:
+    env_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH")
+    if env_path and os.path.exists(env_path):
+        return env_path
+    
+    # Common Render secret file path
+    render_secret_path = "/etc/secrets/firebase-key.json"
+    if os.path.exists(render_secret_path):
+        return render_secret_path
+        
+    # Local Windows secret path
+    windows_secret_path = r"C:\Users\vijay\secrets\firebase-key.json"
+    if os.path.exists(windows_secret_path):
+        return windows_secret_path
+
+    return env_path or None
+
+FIREBASE_SERVICE_ACCOUNT_PATH = resolve_service_account_path()
+
 FIRESTORE_WEATHER_COLLECTION = os.getenv("FIRESTORE_WEATHER_COLLECTION", "weather_snapshots")
 WEATHER_REFRESH_MINUTES = int(os.getenv("WEATHER_REFRESH_MINUTES", "15"))
-
 
 # Open-Meteo Coordinates for Chennai
 CHENNAI_WEATHER_COORDS = {
@@ -36,6 +59,7 @@ CHENNAI_WEATHER_COORDS = {
 def find_dataset_paths():
     """
     Recursively scans the project directory to discover all required datasets dynamically.
+    Works identically in local development and production container environments.
     """
     candidates = {
         "drainage": None,
@@ -46,7 +70,7 @@ def find_dataset_paths():
     }
     
     for root, dirs, files in os.walk(PROJECT_ROOT):
-        if any(skip in root for skip in ['node_modules', '.git', '.gemini', '__pycache__', 'venv']):
+        if any(skip in root for skip in ['node_modules', '.git', '.gemini', '__pycache__', 'venv', '.venv']):
             continue
             
         for f in files:

@@ -51,7 +51,10 @@ class FirebaseManager:
             if has_cert_json:
                 # 1. Load credentials from environment variable (ideal for Render / Cloud deployments)
                 try:
-                    cert_dict = json.loads(cert_json_str)
+                    clean_json = cert_json_str.strip()
+                    if (clean_json.startswith("'") and clean_json.endswith("'")) or (clean_json.startswith('"') and clean_json.endswith('"')):
+                        clean_json = clean_json[1:-1].strip()
+                    cert_dict = json.loads(clean_json)
                     cred = credentials.Certificate(cert_dict)
                     proj_id = cert_dict.get("project_id", FIREBASE_PROJECT_ID)
                     self.app = firebase_admin.initialize_app(cred, {

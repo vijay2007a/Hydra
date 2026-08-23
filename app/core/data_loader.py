@@ -70,10 +70,27 @@ class DataLoader:
 
         try:
             # Clean numerical fields
-            gdf['dlen_km'] = pd.to_numeric(gdf.get('dlen_km', 0), errors='coerce').fillna(0.0)
-            gdf['drain_wid'] = pd.to_numeric(gdf.get('drain_wid', 0.86), errors='coerce').fillna(0.86)
-            gdf['drain_dep'] = pd.to_numeric(gdf.get('drain_dep', 0.86), errors='coerce').fillna(0.86)
-            gdf['st_length_shape'] = pd.to_numeric(gdf.get('st_length(shape)', 0), errors='coerce').fillna(0.0)
+            if 'dlen_km' in gdf.columns:
+                gdf['dlen_km'] = pd.to_numeric(gdf['dlen_km'], errors='coerce').fillna(0.0)
+            else:
+                gdf['dlen_km'] = 0.0
+
+            if 'drain_wid' in gdf.columns:
+                gdf['drain_wid'] = pd.to_numeric(gdf['drain_wid'], errors='coerce').fillna(0.86)
+            else:
+                gdf['drain_wid'] = 0.86
+
+            if 'drain_dep' in gdf.columns:
+                gdf['drain_dep'] = pd.to_numeric(gdf['drain_dep'], errors='coerce').fillna(0.86)
+            else:
+                gdf['drain_dep'] = 0.86
+
+            if 'st_length(shape)' in gdf.columns:
+                gdf['st_length_shape'] = pd.to_numeric(gdf['st_length(shape)'], errors='coerce').fillna(0.0)
+            elif 'st_length_shape' in gdf.columns:
+                gdf['st_length_shape'] = pd.to_numeric(gdf['st_length_shape'], errors='coerce').fillna(0.0)
+            else:
+                gdf['st_length_shape'] = 0.0
             
             # Clean string fields
             for str_col in ['zone', 'ward', 'location', 'drain_type', 'cover', 'status', 'obstacles', 'water_flow', 'typ_mat', 'swd_mat']:
