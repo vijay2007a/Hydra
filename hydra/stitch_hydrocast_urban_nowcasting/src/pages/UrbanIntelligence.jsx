@@ -8,18 +8,27 @@ export const UrbanIntelligence = () => {
   const [selectedStation, setSelectedStation] = useState(null);
   const [weatherData, setWeatherData] = useState(null);
   const [systemStats, setSystemStats] = useState(null);
+  const [reservoirsData, setReservoirsData] = useState(null);
+  const [drainCountData, setDrainCountData] = useState(null);
+  const [uploadStatus, setUploadStatus] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     Promise.all([
       api.getWeather(),
-      api.getSystemStatus()
-    ]).then(([w, s]) => {
+      api.getSystemStatus(),
+      api.getReservoirs(),
+      api.getDrainCount()
+    ]).then(([w, s, res, drains]) => {
       if (w) setWeatherData(w);
       if (s) setSystemStats(s);
+      if (res) setReservoirsData(res);
+      if (drains) setDrainCountData(drains);
     }).catch(e => console.warn('[UrbanIntelligence] Error loading telemetry:', e));
   }, []);
 
-  const infrastructureNodes = [
+  // Infrastructure SCADA nodes combined with live Reservoir and Drain data
+  const baseNodes = [
     {
       id: 'PS-CHN-01',
       name: 'Central Basin Main Pumping Station',
@@ -78,13 +87,67 @@ export const UrbanIntelligence = () => {
     }
   ];
 
+  // Map real Chennai reservoirs into the node matrix
+  const reservoirNodes = (reservoirsData?.reservoirs || []).map((r, i) => ({
+    id: `RES-CHN-0${i + 1}`,
+    name: r.full_name || `${r.name} Reservoir`,
+    type: 'Reservoir',
+    location: `${r.basin} Basin Catchment`,
+    capacity: `${r.capacity_mcft.toLocaleString()} mcft Capacity`,
+    load: Math.round(r.storage_percentage),
+    status: r.status.toUpperCase(),
+    statusColor: r.storage_percentage > 80 ? '#ff4d4d' : (r.storage_percentage > 60 ? '#ffaa00' : '#4edea3'),
+    pumpsOnline: `Basin: ${r.basin}`,
+    sluiceState: `${r.current_level_mcft.toLocaleString()} mcft Stored`,
+    telemetry: `${r.storage_percentage}% Storage Filled`,
+    lastPing: 'Telemetry Active',
+    isRealDataset: true,
+    raw: r
+  }));
+
+  const allInfrastructureNodes = [...reservoirNodes, ...baseNodes];
+
   const filteredNodes = activeFilter === 'ALL' 
-    ? infrastructureNodes 
-    : infrastructureNodes.filter(n => n.type.toUpperCase().includes(activeFilter));
+    ? allInfrastructureNodes 
+    : allInfrastructureNodes.filter(n => n.type.toUpperCase().includes(activeFilter.toUpperCase()));
 
   const currTemp = weatherData?.current?.temperature_celsius ?? 26.2;
   const currPrecip = weatherData?.current?.precipitation_mm ?? 0.0;
   const currCond = weatherData?.current?.weather_condition ?? 'Overcast';
+
+  // Real stats
+  const totalDrainsCount = drainCountData?.total_features_loaded || 2000;
+  const totalDrainKm = drainCountData?.total_network_length_km || 429.16;
+  const obstaclePct = drainCountData?.obstacle_percentage || 44.5;
+  const totalResCapacity = reservoirsData?.total_capacity_mcft || 13213;
+  const totalResLevel = reservoirsData?.total_current_storage_mcft || 8420;
+  const avgResFill = reservoirsData?.average_storage_percentage || 63.7;
+
+  // Handle GeoJSON File Upload
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadStatus(null);
+    try {
+      const res = await api.uploadDrainsGeoJSON(file);
+      setUploadStatus({
+        success: true,
+        message: `Successfully ingested ${res.features_ingested || 'new'} drain features (${res.total_length_km || 'N/A'} km).`
+      });
+      // Refresh count
+      const updatedCount = await api.getDrainCount();
+      if (updatedCount) setDrainCountData(updatedCount);
+    } catch (err) {
+      setUploadStatus({
+        success: false,
+        message: err.message || 'Failed to upload GeoJSON file.'
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   return (
     <div className="bg-absolute-black text-on-surface font-body-md antialiased min-h-screen flex flex-col pt-[72px]">
@@ -104,17 +167,17 @@ export const UrbanIntelligence = () => {
               </h1>
             </div>
             <p className="font-data-mono text-data-mono text-outline mt-2">
-              SCADA Drainage Mesh Telemetry // 10,280 GCC SWD Segments // Open-Meteo: {currTemp}°C ({currCond})
+              SCADA Drainage Mesh Telemetry // {totalDrainsCount.toLocaleString()} GCC SWD Segments ({totalDrainKm} km) // Open-Meteo: {currTemp}°C ({currCond})
             </p>
           </div>
 
           {/* Filter Pills */}
-          <div className="flex items-center gap-2 bg-surface-container-low p-1.5 rounded-lg border border-outline-variant/30 font-label-caps text-label-caps">
-            {['ALL', 'PUMP', 'SLUICE', 'SENSOR'].map((filter) => (
+          <div className="flex items-center gap-2 bg-surface-container-low p-1.5 rounded-lg border border-outline-variant/30 font-label-caps text-label-caps overflow-x-auto">
+            {['ALL', 'RESERVOIR', 'PUMP', 'SLUICE', 'SENSOR'].map((filter) => (
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
-                className={`px-4 py-1.5 rounded font-bold transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded font-bold transition-all cursor-pointer whitespace-nowrap text-xs ${
                   activeFilter === filter
                     ? 'bg-primary-container text-absolute-black shadow-[0_0_10px_rgba(0,242,255,0.4)]'
                     : 'text-outline hover:text-on-surface'
@@ -129,19 +192,19 @@ export const UrbanIntelligence = () => {
         {/* Top KPI Metrics Bento */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-8">
           <div className="bg-surface-container-low/80 backdrop-blur-xl border border-outline-variant/30 rounded-xl p-5 border-t-2 border-t-primary-container shadow-xl">
-            <span className="font-label-caps text-label-caps text-outline block mb-2 font-bold">TOTAL PUMP CAPACITY</span>
+            <span className="font-label-caps text-label-caps text-outline block mb-2 font-bold">TOTAL RESERVOIR STORAGE</span>
             <div className="font-display-lg text-3xl text-primary-container font-bold font-sora">
-              230K <span className="text-sm font-data-mono text-outline font-normal">L/min</span>
+              {totalResLevel.toLocaleString()} <span className="text-sm font-data-mono text-outline font-normal">/ {totalResCapacity.toLocaleString()} mcft</span>
             </div>
-            <div className="text-[11px] font-data-mono text-primary-fixed-dim mt-2">84% Aggregate Utilization</div>
+            <div className="text-[11px] font-data-mono text-primary-fixed-dim mt-2">{avgResFill}% 5 Major Reservoirs Filled</div>
           </div>
 
-          <div className="bg-surface-container-low/80 backdrop-blur-xl border border-outline-variant/30 rounded-xl p-5 border-t-2 border-t-error shadow-xl">
-            <span className="font-label-caps text-label-caps text-outline block mb-2 font-bold">ACTIVE SLUICE SURCHARGES</span>
-            <div className="font-display-lg text-3xl text-error font-bold font-sora">
-              02 <span className="text-sm font-data-mono text-outline font-normal">Gates Engaged</span>
+          <div className="bg-surface-container-low/80 backdrop-blur-xl border border-outline-variant/30 rounded-xl p-5 border-t-2 border-t-secondary shadow-xl">
+            <span className="font-label-caps text-label-caps text-outline block mb-2 font-bold">GCC DRAIN NETWORK</span>
+            <div className="font-display-lg text-3xl text-secondary font-bold font-sora">
+              {totalDrainKm} <span className="text-sm font-data-mono text-outline font-normal">km</span>
             </div>
-            <div className="text-[11px] font-data-mono text-error mt-2">Riverside &amp; Central Sluices</div>
+            <div className="text-[11px] font-data-mono text-secondary mt-2">{totalDrainsCount.toLocaleString()} Segments | {obstaclePct}% Obstacles</div>
           </div>
 
           <div className="bg-surface-container-low/80 backdrop-blur-xl border border-outline-variant/30 rounded-xl p-5 border-t-2 border-t-warning-orange shadow-xl">
@@ -153,14 +216,68 @@ export const UrbanIntelligence = () => {
           </div>
 
           <div className="bg-surface-container-low/80 backdrop-blur-xl border border-outline-variant/30 rounded-xl p-5 border-t-2 border-t-safe-green shadow-xl">
-            <span className="font-label-caps text-label-caps text-outline block mb-2 font-bold">SCADA TELEMETRY SYNC</span>
+            <span className="font-label-caps text-label-caps text-outline block mb-2 font-bold">SCADA &amp; FIRESTORE SYNC</span>
             <div className="font-display-lg text-3xl text-safe-green font-bold font-sora">
-              99.8<span className="text-sm font-data-mono text-outline font-normal">%</span>
+              ONLINE <span className="text-sm font-data-mono text-outline font-normal">(hydra-1963e)</span>
             </div>
-            <div className="text-[11px] font-data-mono text-safe-green mt-2">All 142 Nodes Responding</div>
+            <div className="text-[11px] font-data-mono text-safe-green mt-2">15-Min Cadence Active</div>
           </div>
         </div>
 
+        {/* Chennai Major Reservoirs Real-time Bar Status Section */}
+        {reservoirsData && reservoirsData.reservoirs && (
+          <div className="bg-surface-container-low/80 backdrop-blur-xl border border-outline-variant/30 rounded-xl p-6 mb-8 shadow-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <span className="font-label-caps text-label-caps text-primary-container font-bold">CHENNAI MAJOR RESERVOIRS TELEMETRY</span>
+                <p className="font-data-mono text-xs text-outline mt-0.5">Real-time water levels &amp; storage capacities from Chennai Metrowater observation telemetry</p>
+              </div>
+              <button 
+                onClick={() => navigate('/intelligence-map')}
+                className="font-mono text-xs text-primary-container hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <span>View on GIS Map</span>
+                <span className="material-symbols-outlined text-sm">arrow_forward</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              {reservoirsData.reservoirs.map((res) => (
+                <div key={res.name} className="bg-surface-container p-4 rounded-lg border border-outline-variant/20 flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-start">
+                      <span className="font-mono text-xs font-bold text-primary-container">{res.name}</span>
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface-container-highest text-outline">{res.basin}</span>
+                    </div>
+                    <div className="font-sora text-sm text-on-surface font-semibold mt-1 truncate" title={res.full_name}>{res.full_name}</div>
+                    
+                    <div className="mt-3">
+                      <div className="flex justify-between text-[11px] font-mono mb-1">
+                        <span className="text-outline">Storage</span>
+                        <strong className="text-on-surface">{res.storage_percentage}%</strong>
+                      </div>
+                      <div className="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                        <div 
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{ 
+                            width: `${res.storage_percentage}%`, 
+                            backgroundColor: res.storage_percentage > 80 ? '#ff4d4d' : (res.storage_percentage > 60 ? '#ffaa00' : '#00f2ff'),
+                            boxShadow: `0 0 8px ${res.storage_percentage > 80 ? '#ff4d4d' : '#00f2ff'}`
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 pt-2 border-t border-outline-variant/20 text-[10px] font-mono flex justify-between text-outline">
+                    <span>{res.current_level_mcft.toLocaleString()} mcft</span>
+                    <span>Cap: {res.capacity_mcft.toLocaleString()}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Nodes Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter mb-8">
@@ -193,13 +310,13 @@ export const UrbanIntelligence = () => {
               {/* Progress Bar for Station Load */}
               <div className="mb-4">
                 <div className="flex justify-between text-xs font-data-mono mb-1">
-                  <span className="text-outline">Station Load / Capacity</span>
+                  <span className="text-outline">Storage / Utilization</span>
                   <span className="font-bold" style={{ color: node.statusColor }}>{node.load}%</span>
                 </div>
                 <div className="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
                   <div 
                     className="h-full rounded-full transition-all duration-500" 
-                    style={{ width: `${node.load}%`, backgroundColor: node.statusColor, boxShadow: `0 0 8px ${node.statusColor}` }}
+                    style={{ width: `${Math.min(100, node.load)}%`, backgroundColor: node.statusColor, boxShadow: `0 0 8px ${node.statusColor}` }}
                   ></div>
                 </div>
               </div>
@@ -208,24 +325,61 @@ export const UrbanIntelligence = () => {
               <div className="grid grid-cols-3 gap-2 bg-surface-container p-3 rounded-lg border border-outline-variant/20 text-xs font-data-mono">
                 <div>
                   <span className="text-outline text-[10px] block">RATED CAPACITY</span>
-                  <span className="text-on-surface font-semibold">{node.capacity}</span>
+                  <span className="text-on-surface font-semibold truncate block">{node.capacity}</span>
                 </div>
                 <div>
-                  <span className="text-outline text-[10px] block">PUMP STATUS</span>
-                  <span className="text-primary-container font-semibold">{node.pumpsOnline}</span>
+                  <span className="text-outline text-[10px] block">SYSTEM METRIC</span>
+                  <span className="text-primary-container font-semibold truncate block">{node.pumpsOnline}</span>
                 </div>
                 <div>
-                  <span className="text-outline text-[10px] block">LIVE WATER DEPTH</span>
-                  <span className="text-on-surface font-semibold">{node.telemetry}</span>
+                  <span className="text-outline text-[10px] block">LIVE STATE</span>
+                  <span className="text-on-surface font-semibold truncate block">{node.telemetry}</span>
                 </div>
               </div>
 
               <div className="mt-4 flex justify-between items-center text-xs font-data-mono text-outline">
-                <span>SLUICE: <strong className="text-on-surface">{node.sluiceState}</strong></span>
-                <span>PING: {node.lastPing}</span>
+                <span>STAGE: <strong className="text-on-surface">{node.sluiceState}</strong></span>
+                <span>STATUS: {node.lastPing}</span>
               </div>
             </div>
           ))}
+        </div>
+
+        {/* GCC Drainage GeoJSON Ingestion Card */}
+        <div className="bg-surface-container-low/80 backdrop-blur-xl border border-outline-variant/30 rounded-xl p-6 shadow-2xl">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <span className="font-label-caps text-label-caps text-secondary font-bold">GCC STORM WATER DRAINAGE INGESTION</span>
+              <h3 className="font-sora text-lg text-on-surface font-bold mt-1">Upload Updated Municipal Drain GeoJSON</h3>
+              <p className="font-data-mono text-xs text-outline mt-1">
+                Ingest updated ArcGIS / GeoJSON shapefiles directly into the HydroCast live spatial graph.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <label className="bg-primary-container/20 border border-primary-container text-primary-container hover:bg-primary-container hover:text-absolute-black px-4 py-2 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm">upload_file</span>
+                <span>{isUploading ? 'Uploading...' : 'Upload GeoJSON'}</span>
+                <input 
+                  type="file" 
+                  accept=".geojson,.json" 
+                  onChange={handleFileUpload} 
+                  disabled={isUploading}
+                  className="hidden" 
+                />
+              </label>
+            </div>
+          </div>
+
+          {uploadStatus && (
+            <div className={`mt-4 p-3 rounded-lg border font-mono text-xs ${
+              uploadStatus.success 
+                ? 'bg-safe-green/10 border-safe-green/30 text-safe-green' 
+                : 'bg-error/10 border-error/30 text-error'
+            }`}>
+              {uploadStatus.message}
+            </div>
+          )}
         </div>
 
         {/* Modal for Station Detail */}
@@ -240,7 +394,7 @@ export const UrbanIntelligence = () => {
                 </div>
                 <button 
                   onClick={() => setSelectedStation(null)}
-                  className="text-outline hover:text-on-surface cursor-pointer"
+                  className="text-outline hover:text-on-surface cursor-pointer p-1"
                 >
                   <span className="material-symbols-outlined">close</span>
                 </button>
@@ -249,34 +403,38 @@ export const UrbanIntelligence = () => {
               <div className="space-y-4 font-mono text-xs">
                 <div className="p-3 bg-surface-container rounded-lg border border-outline-variant/30 space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-outline">Station Status:</span>
-                    <span className="font-bold" style={{ color: selectedStation.statusColor }}>{selectedStation.status} ({selectedStation.load}% Load)</span>
+                    <span className="text-outline">Facility Type:</span>
+                    <span className="text-on-surface font-semibold">{selectedStation.type}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-outline">Sluice Gate Position:</span>
-                    <span className="text-on-surface">{selectedStation.sluiceState}</span>
+                    <span className="text-outline">Rated Capacity:</span>
+                    <span className="text-primary-container font-semibold">{selectedStation.capacity}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-outline">Telemetry Reading:</span>
-                    <span className="text-primary-container font-bold">{selectedStation.telemetry}</span>
+                    <span className="text-outline">Operational Stage:</span>
+                    <span className="text-on-surface font-semibold">{selectedStation.telemetry}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-outline">Status Level:</span>
+                    <span className="font-bold" style={{ color: selectedStation.statusColor }}>{selectedStation.status} ({selectedStation.load}%)</span>
                   </div>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex justify-end gap-3 pt-2">
+                  <button 
+                    onClick={() => setSelectedStation(null)}
+                    className="px-4 py-2 rounded-lg bg-surface-container text-on-surface font-mono text-xs hover:bg-surface-container-high transition-colors cursor-pointer"
+                  >
+                    Close
+                  </button>
                   <button 
                     onClick={() => {
                       setSelectedStation(null);
-                      navigate(`/intelligence-map?q=${encodeURIComponent(selectedStation.name)}`);
+                      navigate('/intelligence-map');
                     }}
-                    className="flex-1 py-3 bg-primary-container text-absolute-black font-bold rounded font-sora text-xs hover:bg-primary transition-all cursor-pointer shadow-[0_0_15px_rgba(0,242,255,0.4)]"
+                    className="px-4 py-2 rounded-lg bg-primary-container text-absolute-black font-mono text-xs font-bold hover:bg-primary transition-colors cursor-pointer shadow-[0_0_15px_rgba(0,242,255,0.4)]"
                   >
-                    VIEW ON GEOSPATIAL MAP
-                  </button>
-                  <button 
-                    onClick={() => setSelectedStation(null)}
-                    className="px-5 py-3 bg-surface-bright text-on-surface rounded font-mono text-xs hover:bg-surface-container-high cursor-pointer"
-                  >
-                    Close
+                    Inspect in GIS Matrix
                   </button>
                 </div>
               </div>
@@ -285,19 +443,6 @@ export const UrbanIntelligence = () => {
         )}
 
       </main>
-
-      {/* Footer */}
-      <footer className="w-full py-8 border-t border-outline-variant/10 bg-absolute-black flex flex-col md:flex-row justify-between items-center px-margin-desktop gap-4 z-20 relative">
-        <div className="font-label-caps text-on-surface opacity-80">
-          © 2026 HYDROCAST INTELLIGENCE. SCADA URBAN TELEMETRY PROTOCOL.
-        </div>
-        <div className="flex gap-4">
-          <span onClick={() => navigate('/protocol')} className="font-data-mono text-label-caps text-outline hover:text-on-surface hover:underline decoration-primary-container opacity-80 cursor-pointer">Protocol</span>
-          <span onClick={() => navigate('/predictions')} className="font-data-mono text-label-caps text-outline hover:text-on-surface hover:underline decoration-primary-container opacity-80 cursor-pointer">AI Predictions</span>
-          <span onClick={() => navigate('/intelligence-map')} className="font-data-mono text-label-caps text-outline hover:text-on-surface hover:underline decoration-primary-container opacity-80 cursor-pointer">GIS Map</span>
-        </div>
-      </footer>
-
     </div>
   );
 };

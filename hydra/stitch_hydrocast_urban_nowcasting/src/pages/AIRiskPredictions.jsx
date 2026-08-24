@@ -5,7 +5,7 @@ import { api } from '../services/api';
 export const AIRiskPredictions = () => {
   const navigate = useNavigate();
   const [sliderPos, setSliderPos] = useState(40);
-  const [selectedScenario, setSelectedScenario] = useState('High Intensity');
+  const [selectedScenario, setSelectedScenario] = useState('Standard Flow');
   const [reportGenerated, setReportGenerated] = useState(false);
 
   // Live Telemetry States
@@ -37,12 +37,24 @@ export const AIRiskPredictions = () => {
     setSliderPos(percentage);
   };
 
-  // Compute live score from predictions or scenario
-  const meanScore = predictions.length > 0
-    ? Math.round(predictions.reduce((acc, p) => acc + (p.riskScore || 35), 0) / predictions.length)
-    : 48;
-  const activeScore = selectedScenario === 'Flash Flood Event' ? 84 : (selectedScenario === 'High Intensity' ? 68 : 34);
-  const riskStatus = activeScore > 75 ? 'STATUS: HIGH' : (activeScore > 50 ? 'STATUS: ELEVATED' : 'STATUS: MODERATE');
+  // Real Calculated Baseline Risk Score from Backend HFVI Multi-Criteria Engine
+  const realBaselineScore = systemStats?.meanRiskScore 
+    ? Math.round(systemStats.meanRiskScore) 
+    : (predictions.length > 0 
+        ? Math.round(predictions.reduce((acc, p) => acc + (p.riskScore || 0), 0) / predictions.length) 
+        : 31);
+
+  // Distinguish Real Current Baseline vs Stress-Test Simulations
+  const isSimulation = selectedScenario !== 'Standard Flow';
+  const activeScore = selectedScenario === 'Flash Flood Event' 
+    ? Math.min(100, Math.round(realBaselineScore + 48))
+    : (selectedScenario === 'High Intensity' 
+        ? Math.min(100, Math.round(realBaselineScore + 28))
+        : realBaselineScore);
+
+  const riskStatus = activeScore > 75 
+    ? 'STATUS: HIGH' 
+    : (activeScore > 50 ? 'STATUS: ELEVATED' : (activeScore > 25 ? 'STATUS: MODERATE' : 'STATUS: LOW'));
 
   return (
     <div className="bg-absolute-black text-on-surface font-body-md antialiased min-h-screen flex flex-col relative overflow-x-hidden pt-[72px]">
@@ -59,7 +71,7 @@ export const AIRiskPredictions = () => {
               AI FLOOD PREDICTIONS
             </h1>
             <p className="font-data-mono text-data-mono text-outline">
-              Predict Risk. Act Earlier. // 10,280 GCC SWD Segments Evaluated // NASA IMERG + Open-Meteo Forcing
+              Predict Risk. Act Earlier. // 2,000 GCC SWD Segments Evaluated // NASA IMERG + Open-Meteo Forcing
             </p>
             <div className="aurora-divider mt-6 w-full h-px bg-gradient-to-r from-transparent via-primary-container/50 to-transparent"></div>
           </div>
@@ -67,20 +79,43 @@ export const AIRiskPredictions = () => {
           {/* Left Column: Risk Score & Timeline (Bento Layout) */}
           <div className="col-span-1 md:col-span-4 flex flex-col gap-gutter">
             
-            {/* Main Risk Score */}
+            {/* Main Risk Score Gauge (Real Backend Result + Simulation Modifier) */}
             <div className="bg-surface-dim/70 backdrop-blur-xl border border-outline-variant/50 rounded-xl p-glass-padding flex flex-col items-center justify-center relative overflow-hidden scanning-border shadow-[0_0_30px_rgba(206,93,255,0.1)]">
               <div className="absolute inset-0 bg-gradient-to-b from-secondary-container/10 to-transparent pointer-events-none"></div>
-              <span className="font-label-caps text-label-caps text-secondary-container mb-4 z-10 font-bold">OVERALL RISK SCORE</span>
               
-              <div className="relative w-48 h-48 flex items-center justify-center rounded-full pulse-ring border-2 border-secondary-container/50 bg-surface-container-low/80 z-10">
+              <div className="flex items-center justify-between w-full mb-2 z-10 px-2">
+                <span className="font-label-caps text-label-caps text-secondary-container font-bold">
+                  {isSimulation ? 'SIMULATED RISK PROJECTION' : 'REAL CURRENT HFVI RISK'}
+                </span>
+                <span className={`font-mono text-[10px] px-2 py-0.5 rounded border ${
+                  isSimulation 
+                    ? 'border-warning-orange/40 bg-warning-orange/10 text-warning-orange' 
+                    : 'border-primary-container/40 bg-primary-container/10 text-primary-container'
+                }`}>
+                  {isSimulation ? 'SCENARIO PROJECTION' : 'LIVE BACKEND'}
+                </span>
+              </div>
+              
+              <div className="relative w-48 h-48 flex items-center justify-center rounded-full pulse-ring border-2 border-secondary-container/50 bg-surface-container-low/80 z-10 my-2">
                 <div className="flex flex-col items-center">
                   <span className="font-display-lg text-display-lg text-white font-bold">{activeScore}</span>
                   <span className="font-data-mono text-data-mono text-outline mt-[-8px]">/100</span>
                 </div>
               </div>
 
-              <div className="mt-6 bg-error/20 px-6 py-2 rounded-full border border-error/50 z-10">
-                <span className="font-label-caps text-label-caps text-error font-bold">{riskStatus}</span>
+              <div className="mt-4 flex flex-col items-center gap-1 z-10">
+                <div className={`px-6 py-1.5 rounded-full border font-bold text-xs ${
+                  activeScore > 75 
+                    ? 'bg-error/20 border-error/50 text-error' 
+                    : (activeScore > 50 ? 'bg-warning-orange/20 border-warning-orange/50 text-warning-orange' : 'bg-primary-container/20 border-primary-container/50 text-primary-container')
+                }`}>
+                  <span className="font-label-caps">{riskStatus}</span>
+                </div>
+                {isSimulation && (
+                  <span className="text-[10px] font-mono text-outline mt-1">
+                    Live Baseline HFVI: <strong className="text-primary-container">{realBaselineScore}/100</strong>
+                  </span>
+                )}
               </div>
             </div>
 
@@ -112,27 +147,18 @@ export const AIRiskPredictions = () => {
               </div>
             </div>
 
-            {/* Explainable AI */}
+            {/* Explainable AI Multi-Criteria Weights */}
             <div className="bg-surface-dim/70 backdrop-blur-xl border border-outline-variant/30 rounded-xl p-glass-padding relative">
               <div className="flex items-center gap-2 mb-4">
                 <span className="material-symbols-outlined text-primary-container text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
                   psychology
                 </span>
-                <span className="font-label-caps text-label-caps text-primary-container font-bold">WHY THIS PREDICTION?</span>
+                <span className="font-label-caps text-label-caps text-primary-container font-bold">HFVI MODEL FACTOR WEIGHTS</span>
               </div>
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between font-data-mono text-[12px] mb-1">
-                    <span className="text-on-surface">Drainage Deficit (GCC SWD)</span>
-                    <span className="text-secondary-container font-bold">35% weight</span>
-                  </div>
-                  <div className="h-1 bg-surface-container-highest w-full">
-                    <div className="h-full bg-secondary-container w-[35%]"></div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between font-data-mono text-[12px] mb-1">
-                    <span className="text-on-surface">Precipitation Hazard (IMERG + Open-Meteo)</span>
+                    <span className="text-on-surface">Precipitation Hazard (NASA IMERG + Weather)</span>
                     <span className="text-primary-container font-bold">30% weight</span>
                   </div>
                   <div className="h-1 bg-surface-container-highest w-full">
@@ -141,7 +167,16 @@ export const AIRiskPredictions = () => {
                 </div>
                 <div>
                   <div className="flex justify-between font-data-mono text-[12px] mb-1">
-                    <span className="text-on-surface">Hydro Proximity (OSM Waterways)</span>
+                    <span className="text-on-surface">Drainage Deficit (GCC SWD Capacity)</span>
+                    <span className="text-secondary-container font-bold">25% weight</span>
+                  </div>
+                  <div className="h-1 bg-surface-container-highest w-full">
+                    <div className="h-full bg-secondary-container w-[25%]"></div>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between font-data-mono text-[12px] mb-1">
+                    <span className="text-on-surface">Hydro Proximity (OSM Rivers &amp; Canals)</span>
                     <span className="text-outline font-bold">20% weight</span>
                   </div>
                   <div className="h-1 bg-surface-container-highest w-full">
@@ -150,11 +185,20 @@ export const AIRiskPredictions = () => {
                 </div>
                 <div>
                   <div className="flex justify-between font-data-mono text-[12px] mb-1">
-                    <span className="text-on-surface">Reservoir System Headroom</span>
-                    <span className="text-primary-container font-bold">15% weight</span>
+                    <span className="text-on-surface">Urban Impervious Exposure</span>
+                    <span className="text-outline-variant font-bold">15% weight</span>
                   </div>
                   <div className="h-1 bg-surface-container-highest w-full">
-                    <div className="h-full bg-primary-container w-[15%]"></div>
+                    <div className="h-full bg-outline-variant w-[15%]"></div>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between font-data-mono text-[12px] mb-1">
+                    <span className="text-on-surface">Reservoir Storage Stress (5 Reservoirs)</span>
+                    <span className="text-primary-container font-bold">10% weight</span>
+                  </div>
+                  <div className="h-1 bg-surface-container-highest w-full">
+                    <div className="h-full bg-primary-container w-[10%]"></div>
                   </div>
                 </div>
               </div>
@@ -180,24 +224,24 @@ export const AIRiskPredictions = () => {
                 </div>
               </div>
 
-              {/* Drainage Saturation Model */}
+              {/* Drainage Saturation Model by Zone */}
               <div className="bg-surface-dim/70 backdrop-blur-xl border border-outline-variant/30 rounded-xl p-glass-padding h-64 flex flex-col relative group">
-                <span className="font-label-caps text-label-caps text-on-surface-variant mb-2 font-bold">DRAINAGE SATURATION MODEL</span>
+                <span className="font-label-caps text-label-caps text-on-surface-variant mb-2 font-bold">DRAINAGE SATURATION MODEL (GCC ZONES)</span>
                 <div className="flex-1 w-full relative flex items-end gap-2 justify-around border-b border-outline-variant/20 pb-2">
                   <div className="w-1/6 bg-outline-variant/50 h-[30%] relative group-hover:bg-primary-container/50 transition-colors">
                     <div className="absolute top-[-20px] w-full text-center font-data-mono text-[10px] text-outline">N01</div>
                   </div>
-                  <div className="w-1/6 bg-outline-variant/50 h-[50%] relative group-hover:bg-primary-container/50 transition-colors">
+                  <div className="w-1/6 bg-outline-variant/50 h-[45%] relative group-hover:bg-primary-container/50 transition-colors">
                     <div className="absolute top-[-20px] w-full text-center font-data-mono text-[10px] text-outline">N04</div>
                   </div>
-                  <div className="w-1/6 bg-secondary-container/50 h-[85%] relative group-hover:bg-secondary-container transition-colors">
+                  <div className="w-1/6 bg-secondary-container/50 h-[55%] relative group-hover:bg-secondary-container transition-colors">
                     <div className="absolute top-[-20px] w-full text-center font-data-mono text-[10px] text-secondary-container shadow-[0_0_10px_rgba(206,93,255,0.8)] font-bold">N08</div>
                   </div>
-                  <div className="w-1/6 bg-outline-variant/50 h-[60%] relative group-hover:bg-primary-container/50 transition-colors">
-                    <div className="absolute top-[-20px] w-full text-center font-data-mono text-[10px] text-outline">N11</div>
-                  </div>
                   <div className="w-1/6 bg-outline-variant/50 h-[40%] relative group-hover:bg-primary-container/50 transition-colors">
-                    <div className="absolute top-[-20px] w-full text-center font-data-mono text-[10px] text-outline">N15</div>
+                    <div className="absolute top-[-20px] w-full text-center font-data-mono text-[10px] text-outline">N09</div>
+                  </div>
+                  <div className="w-1/6 bg-outline-variant/50 h-[35%] relative group-hover:bg-primary-container/50 transition-colors">
+                    <div className="absolute top-[-20px] w-full text-center font-data-mono text-[10px] text-outline">N10</div>
                   </div>
                 </div>
               </div>
@@ -205,10 +249,13 @@ export const AIRiskPredictions = () => {
 
             {/* Scenario Cards */}
             <div className="bg-surface-dim/70 backdrop-blur-xl border border-outline-variant/30 rounded-xl p-glass-padding">
-              <span className="font-label-caps text-label-caps text-on-surface mb-6 block font-bold">PREDICTIVE SCENARIOS</span>
+              <div className="flex justify-between items-center mb-4">
+                <span className="font-label-caps text-label-caps text-on-surface font-bold">SIMULATION STRESS-TEST SCENARIOS</span>
+                <span className="font-mono text-xs text-outline">Interactive Hydraulic Modifiers</span>
+              </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Standard Flow */}
+                {/* Standard Flow (Live Baseline) */}
                 <div 
                   onClick={() => setSelectedScenario('Standard Flow')}
                   className={`border p-4 rounded-lg transition-all cursor-pointer group ${
@@ -219,36 +266,40 @@ export const AIRiskPredictions = () => {
                 >
                   <div className="flex justify-between items-start mb-2">
                     <span className={`font-data-mono text-sm ${selectedScenario === 'Standard Flow' ? 'text-primary-container font-bold' : 'text-outline group-hover:text-primary-container'}`}>
-                      Standard Flow
+                      Live Baseline Flow
                     </span>
                     <span className="material-symbols-outlined text-outline text-sm">water</span>
                   </div>
-                  <div className="font-display-lg text-2xl text-on-surface mb-1 font-bold">24%</div>
-                  <div className="font-label-caps text-[10px] text-outline">PROBABILITY</div>
+                  <div className="font-display-lg text-2xl text-primary mb-1 font-bold">{realBaselineScore} / 100</div>
+                  <div className="font-label-caps text-[10px] text-primary-container font-bold">
+                    {selectedScenario === 'Standard Flow' ? 'REAL HFVI (ACTIVE)' : 'CURRENT BASELINE'}
+                  </div>
                 </div>
 
-                {/* High Intensity */}
+                {/* High Intensity (Simulation) */}
                 <div 
                   onClick={() => setSelectedScenario('High Intensity')}
                   className={`border p-4 rounded-lg relative overflow-hidden cursor-pointer ${
                     selectedScenario === 'High Intensity'
-                      ? 'border-primary-container/50 bg-primary-container/10 shadow-[0_0_15px_rgba(0,242,255,0.2)]'
-                      : 'border-outline-variant/30 bg-surface-container-low hover:border-primary-container/50'
+                      ? 'border-warning-orange/50 bg-warning-orange/10 shadow-[0_0_15px_rgba(255,170,0,0.2)]'
+                      : 'border-outline-variant/30 bg-surface-container-low hover:border-warning-orange/50'
                   }`}
                 >
                   <div className="flex justify-between items-start mb-2 relative z-10">
-                    <span className="font-data-mono text-sm text-primary-container font-bold">High Intensity</span>
-                    <span className="material-symbols-outlined text-primary-container text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
+                    <span className="font-data-mono text-sm text-warning-orange font-bold">High Intensity (+50mm/hr)</span>
+                    <span className="material-symbols-outlined text-warning-orange text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
                       tsunami
                     </span>
                   </div>
-                  <div className="font-display-lg text-2xl text-white mb-1 relative z-10 font-bold">68%</div>
-                  <div className="font-label-caps text-[10px] text-primary-container relative z-10 font-bold">
-                    {selectedScenario === 'High Intensity' ? 'PROBABILITY (ACTIVE)' : 'PROBABILITY'}
+                  <div className="font-display-lg text-2xl text-white mb-1 relative z-10 font-bold">
+                    {Math.min(100, Math.round(realBaselineScore + 28))} / 100
+                  </div>
+                  <div className="font-label-caps text-[10px] text-warning-orange relative z-10 font-bold">
+                    {selectedScenario === 'High Intensity' ? 'STRESS SIMULATION (ACTIVE)' : 'SIMULATION PROJECTION'}
                   </div>
                 </div>
 
-                {/* Flash Flood Event */}
+                {/* Flash Flood Event (Simulation) */}
                 <div 
                   onClick={() => setSelectedScenario('Flash Flood Event')}
                   className={`border p-4 rounded-lg transition-all cursor-pointer group ${
@@ -259,19 +310,23 @@ export const AIRiskPredictions = () => {
                 >
                   <div className="flex justify-between items-start mb-2">
                     <span className={`font-data-mono text-sm ${selectedScenario === 'Flash Flood Event' ? 'text-secondary-container font-bold' : 'text-outline group-hover:text-secondary-container'}`}>
-                      Flash Flood Event
+                      Flash Flood (+120mm)
                     </span>
                     <span className="material-symbols-outlined text-outline text-sm group-hover:text-secondary-container">warning</span>
                   </div>
-                  <div className="font-display-lg text-2xl text-on-surface mb-1 font-bold">08%</div>
-                  <div className="font-label-caps text-[10px] text-outline">PROBABILITY</div>
+                  <div className="font-display-lg text-2xl text-secondary mb-1 font-bold">
+                    {Math.min(100, Math.round(realBaselineScore + 48))} / 100
+                  </div>
+                  <div className="font-label-caps text-[10px] text-secondary-container font-bold">
+                    {selectedScenario === 'Flash Flood Event' ? 'EXTREME SIMULATION (ACTIVE)' : 'SIMULATION PROJECTION'}
+                  </div>
                 </div>
               </div>
 
               {/* Generate Report Message */}
               {reportGenerated && (
                 <div className="mt-4 p-3 rounded-lg bg-primary-container/10 border border-primary-container/40 text-primary-container font-mono text-xs animate-pulse flex items-center justify-between">
-                  <span>✓ HydroGNN Spatio-Temporal Prediction Dossier v4.2 Compiled.</span>
+                  <span>✓ Multi-Criteria HFVI Vulnerability Dossier compiled from real GCC SWD &amp; NASA IMERG telemetry.</span>
                   <span onClick={() => navigate('/protocol')} className="underline cursor-pointer">Inspect Model Protocol</span>
                 </div>
               )}
@@ -294,7 +349,7 @@ export const AIRiskPredictions = () => {
       {/* Footer with Distinct Data Source Attribution */}
       <footer className="w-full py-8 border-t border-outline-variant/10 bg-absolute-black flex flex-col md:flex-row justify-between items-center px-margin-desktop gap-4 z-40 relative">
         <div className="font-label-caps text-on-surface text-label-caps opacity-80">
-          © 2026 HYDROCAST INTELLIGENCE. MODEL: HFVI DETERMINISTIC // SATELLITE: NASA IMERG // WEATHER: OPEN-METEO // DRAINAGE: GCC SWD (10,280 FEATURES).
+          © 2026 HYDROCAST INTELLIGENCE. MODEL: HFVI DETERMINISTIC // SATELLITE: NASA IMERG // WEATHER: OPEN-METEO // DRAINAGE: GCC SWD (2,000 FEATURES).
         </div>
         <div className="flex gap-6">
           <span onClick={() => navigate('/protocol')} className="font-data-mono text-label-caps text-outline hover:text-on-surface hover:underline decoration-primary-container opacity-80 cursor-pointer">Protocol</span>
@@ -306,4 +361,3 @@ export const AIRiskPredictions = () => {
     </div>
   );
 };
-

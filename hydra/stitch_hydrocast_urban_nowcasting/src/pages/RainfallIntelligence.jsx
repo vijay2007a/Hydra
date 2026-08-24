@@ -2,6 +2,90 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 
+// Build Dynamic SVG Trend Path and Cumulative Line from 48 NASA IMERG Half-Hourly Observations
+const buildTrendPaths = (points) => {
+  if (!points || !Array.isArray(points) || points.length === 0) {
+    return {
+      rateLine: 'M 20 200 L 680 200',
+      rateArea: 'M 20 200 L 680 200 Z',
+      cumulativeLine: 'M 20 200 L 680 200',
+      peakPoint: { x: 350, y: 200, val: 0, label: '0.00 mm/hr' },
+      xLabels: ['T-24H', 'T-18H', 'T-12H', 'T-6H', 'NOW']
+    };
+  }
+
+  const rawRates = points.map(p => Math.max(0, Number(p?.max_rate_mm_hr ?? p?.mean_rate_mm_hr ?? 0)));
+  const n = rawRates.length;
+  const minVal = 0;
+  const maxVal = Math.max(...rawRates);
+  const valRange = maxVal > 0 ? maxVal : 1.0;
+
+  // X bounds: 20 to 680, Y bounds: 40 (top) to 200 (bottom baseline)
+  const coords = rawRates.map((val, idx) => {
+    const x = n > 1 ? 20 + (idx / (n - 1)) * 660 : 350;
+    const norm = (val - minVal) / valRange;
+    const y = 200 - norm * 150;
+    return { x, y, val };
+  });
+
+  // Build Rate Line (SVG path)
+  let rateLine = `M ${coords[0].x.toFixed(1)} ${coords[0].y.toFixed(1)}`;
+  for (let i = 1; i < coords.length; i++) {
+    rateLine += ` L ${coords[i].x.toFixed(1)} ${coords[i].y.toFixed(1)}`;
+  }
+
+  // Build Rate Area Fill
+  const rateArea = `${rateLine} L ${coords[coords.length - 1].x.toFixed(1)} 200 L ${coords[0].x.toFixed(1)} 200 Z`;
+
+  // Build Cumulative Sum Line
+  let cumSum = 0;
+  const cumVals = rawRates.map(v => {
+    cumSum += v * 0.5; // half-hour accumulation in mm
+    return cumSum;
+  });
+  const maxCum = Math.max(...cumVals) > 0 ? Math.max(...cumVals) : 1.0;
+  const cumCoords = cumVals.map((cVal, idx) => {
+    const x = n > 1 ? 20 + (idx / (n - 1)) * 660 : 350;
+    const norm = cVal / maxCum;
+    const y = 200 - norm * 140;
+    return { x, y, cVal };
+  });
+  let cumulativeLine = `M ${cumCoords[0].x.toFixed(1)} ${cumCoords[0].y.toFixed(1)}`;
+  for (let i = 1; i < cumCoords.length; i++) {
+    cumulativeLine += ` L ${cumCoords[i].x.toFixed(1)} ${cumCoords[i].y.toFixed(1)}`;
+  }
+
+  // Find Peak Index
+  let peakIdx = 0;
+  let peakVal = rawRates[0];
+  rawRates.forEach((v, idx) => {
+    if (v >= peakVal) {
+      peakVal = v;
+      peakIdx = idx;
+    }
+  });
+
+  const peakPoint = {
+    x: coords[peakIdx].x,
+    y: coords[peakIdx].y,
+    val: peakVal,
+    label: `${peakVal.toFixed(2)} mm/hr Peak`
+  };
+
+  // Generate 5 dynamic time labels across observations
+  const labelIndices = [0, Math.floor(n * 0.25), Math.floor(n * 0.5), Math.floor(n * 0.75), n - 1];
+  const xLabels = labelIndices.map(idx => {
+    const pt = points[idx];
+    if (pt?.timestamp) {
+      const d = new Date(pt.timestamp);
+      return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}Z`;
+    }
+    return `T-${Math.round((n - 1 - idx) * 0.5)}h`;
+  });
+
+  return { rateLine, rateArea, cumulativeLine, peakPoint, xLabels };
+};
+
 export const RainfallIntelligence = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Live Sensors');
@@ -11,16 +95,22 @@ export const RainfallIntelligence = () => {
   // Live Telemetry States
   const [weatherData, setWeatherData] = useState(null);
   const [rainfallData, setRainfallData] = useState(null);
+  const [weatherHistory, setWeatherHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchLiveTelemetry = async (force = false) => {
     try {
-      const [w, r] = await Promise.all([
+      if (force) {
+        await api.refreshWeather();
+      }
+      const [w, r, hist] = await Promise.all([
         api.getWeather(force),
-        api.getRainfallData()
+        api.getRainfallData(true),
+        api.getWeatherHistory(6)
       ]);
       if (w) setWeatherData(w);
       if (r) setRainfallData(r);
+      if (hist && hist.history) setWeatherHistory(hist.history);
     } catch (e) {
       console.warn('[RainfallIntelligence] Error loading telemetry:', e);
     } finally {
@@ -46,21 +136,25 @@ export const RainfallIntelligence = () => {
   };
 
   const currWeather = weatherData?.current || {};
-  const dailyForecast = weatherData?.daily_forecast || [];
-  const hourlyForecast = weatherData?.hourly_forecast || {};
   const isCached = weatherData?.firebase_sync?.is_cached || false;
   const lastUpdatedTime = currWeather.time || (weatherData?.firebase_sync?.cached_at_epoch ? new Date(weatherData.firebase_sync.cached_at_epoch * 1000).toLocaleTimeString() : 'LIVE: NOW');
 
   // Extract key real metrics
-  const currentTemp = currWeather.temperature_celsius !== undefined ? currWeather.temperature_celsius : 26.2;
+  const currentTemp = currWeather.temperature_celsius !== undefined ? currWeather.temperature_celsius : 28.4;
   const currentPrecip = currWeather.precipitation_mm !== undefined ? currWeather.precipitation_mm : 0.0;
-  const currentHumidity = currWeather.relative_humidity_pct !== undefined ? currWeather.relative_humidity_pct : 81;
+  const currentHumidity = currWeather.relative_humidity_pct !== undefined ? currWeather.relative_humidity_pct : 82;
   const currentCondition = currWeather.weather_condition || 'Overcast';
-  const currentWind = currWeather.wind_speed_kmh !== undefined ? currWeather.wind_speed_kmh : 12.3;
+  const currentWind = currWeather.wind_speed_kmh !== undefined ? currWeather.wind_speed_kmh : 7.9;
   const currentPressure = currWeather.surface_pressure_hpa !== undefined ? currWeather.surface_pressure_hpa : 1007.6;
-  const currentCloud = currWeather.cloud_cover_pct !== undefined ? currWeather.cloud_cover_pct : 98;
-  const totalAcc24h = rainfallData?.totalAccumulation24h || '48.2 mm';
+  const currentCloud = currWeather.cloud_cover_pct !== undefined ? currWeather.cloud_cover_pct : 100;
+  const totalAcc24h = rainfallData?.totalAccumulation24h || '0.0 mm';
+  const peakRate = rainfallData?.currentPeakRate || '0.0 mm/hr';
+  const meanRate = rainfallData?.currentMeanRate || '0.0 mm/hr';
+  const datasetProduct = rainfallData?.satelliteProduct || 'NASA GPM IMERG V07';
 
+  // Recent trend points from IMERG
+  const trendPoints = rainfallData?.recentTrend || [];
+  const svgData = buildTrendPaths(trendPoints);
 
   return (
     <div className="bg-absolute-black text-on-surface font-body-md antialiased min-h-screen flex flex-col pt-[72px]">
@@ -87,55 +181,47 @@ export const RainfallIntelligence = () => {
                 activeTab === 'Overview' ? 'bg-primary-container/10 text-primary-container border-r-2 border-primary-container' : 'text-outline hover:text-on-surface hover:bg-surface-container-high/50'
               }`}
             >
-              <span className="material-symbols-outlined">dashboard</span>
-              <span>Overview</span>
+              <span className="material-symbols-outlined text-sm group-hover:text-primary-container transition-colors">dashboard</span>
+              <span className="text-xs">Command Hub</span>
             </button>
 
             <button 
-              onClick={() => setActiveTab('Live Sensors')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-DEFAULT text-left transition-all group duration-200 cursor-pointer ${
-                activeTab === 'Live Sensors' ? 'bg-primary-container/10 text-primary-container border-r-2 border-primary-container font-bold' : 'text-outline hover:text-on-surface hover:bg-surface-container-high/50'
-              }`}
+              onClick={() => { setActiveTab('Map'); navigate('/intelligence-map'); }}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-DEFAULT text-outline hover:text-on-surface transition-all hover:bg-surface-container-high/50 text-left cursor-pointer"
             >
-              <span className="material-symbols-outlined text-primary-container" style={{ fontVariationSettings: "'FILL' 1" }}>sensors</span>
-              <span className="font-bold">Live Sensors</span>
+              <span className="material-symbols-outlined text-sm">map</span>
+              <span className="text-xs">Intelligence GIS</span>
             </button>
 
             <button 
-              onClick={() => { setActiveTab('Risk Models'); navigate('/predictions'); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-DEFAULT text-left transition-all group duration-200 cursor-pointer ${
-                activeTab === 'Risk Models' ? 'bg-primary-container/10 text-primary-container border-r-2 border-primary-container' : 'text-outline hover:text-on-surface hover:bg-surface-container-high/50'
-              }`}
+              onClick={() => { setActiveTab('Live Sensors'); navigate('/rainfall'); }}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-DEFAULT bg-primary-container/10 text-primary-container border-r-2 border-primary-container text-left cursor-pointer font-bold"
             >
-              <span className="material-symbols-outlined">warning</span>
-              <span>Risk Models</span>
+              <span className="material-symbols-outlined text-sm">water_drop</span>
+              <span className="text-xs">Rainfall Analytics</span>
             </button>
 
             <button 
-              onClick={() => { setActiveTab('Evacuation'); navigate('/intelligence-map'); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-DEFAULT text-left transition-all group duration-200 cursor-pointer ${
-                activeTab === 'Evacuation' ? 'bg-primary-container/10 text-primary-container border-r-2 border-primary-container' : 'text-outline hover:text-on-surface hover:bg-surface-container-high/50'
-              }`}
+              onClick={() => { setActiveTab('Infrastructure'); navigate('/urban-intelligence'); }}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-DEFAULT text-outline hover:text-on-surface transition-all hover:bg-surface-container-high/50 text-left cursor-pointer"
             >
-              <span className="material-symbols-outlined">emergency_share</span>
-              <span>Evacuation</span>
+              <span className="material-symbols-outlined text-sm">domain</span>
+              <span className="text-xs">Drainage & SCADA</span>
             </button>
 
             <button 
-              onClick={() => { setActiveTab('Archive'); navigate('/urban-intelligence'); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-DEFAULT text-left transition-all group duration-200 cursor-pointer ${
-                activeTab === 'Archive' ? 'bg-primary-container/10 text-primary-container border-r-2 border-primary-container' : 'text-outline hover:text-on-surface hover:bg-surface-container-high/50'
-              }`}
+              onClick={() => { setActiveTab('AI Models'); navigate('/predictions'); }}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-DEFAULT text-outline hover:text-on-surface transition-all hover:bg-surface-container-high/50 text-left cursor-pointer"
             >
-              <span className="material-symbols-outlined">inventory_2</span>
-              <span>Infrastructure</span>
+              <span className="material-symbols-outlined text-sm">psychology</span>
+              <span className="text-xs">AI Predictions</span>
             </button>
           </div>
 
-          <div className="px-6 mt-auto mb-6">
+          <div className="px-6 py-4 border-t border-outline-variant/20">
             <button 
               onClick={() => navigate('/intelligence-map')}
-              className="w-full py-3 bg-primary-container text-absolute-black font-label-caps text-label-caps font-bold rounded-DEFAULT hover:bg-primary transition-colors drop-shadow-glow-cyan active:scale-95 cursor-pointer"
+              className="w-full py-2 bg-gradient-to-r from-primary-container to-secondary text-surface-container-lowest font-label-caps text-label-caps rounded-DEFAULT font-bold shadow-[0_0_15px_rgba(0,242,255,0.4)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               DEPLOY RESPONSE
             </button>
@@ -188,13 +274,12 @@ export const RainfallIntelligence = () => {
                 <div>
                   <div className="font-label-caps text-label-caps text-primary-container text-[10px] font-bold">DATA SOURCES</div>
                   <div className="font-data-mono text-data-mono text-on-surface font-bold text-xs">
-                    NASA IMERG (Sat) + Open-Meteo (Live)
+                    {datasetProduct} + Open-Meteo (Live)
                   </div>
                 </div>
               </div>
             </div>
           </header>
-
 
           {/* Grid Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
@@ -206,48 +291,103 @@ export const RainfallIntelligence = () => {
               <div className="flex justify-between items-center mb-4 relative z-10">
                 <h2 className="font-label-caps text-label-caps text-on-surface-variant flex items-center gap-2 font-bold">
                   <span className="material-symbols-outlined text-sm">show_chart</span>
-                  METEOROLOGICAL & PRECIPITATION PROFILE
+                  NASA IMERG PRECIPITATION &amp; METEOROLOGICAL PROFILE
                 </h2>
                 <div className="flex gap-4 font-data-mono text-data-mono text-xs">
                   <div className="flex items-center gap-2">
                     <span className="w-3 h-1 bg-primary-container drop-shadow-glow-cyan"></span> Open-Meteo Temp ({currentTemp}°C)
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="w-3 h-1 bg-secondary drop-shadow-glow-cyan"></span> Precip ({currentPrecip} mm)
+                    <span className="w-3 h-1 bg-secondary drop-shadow-glow-cyan"></span> Mean Rate ({meanRate})
                   </div>
                 </div>
               </div>
 
-              {/* Faux Chart SVG Container with Live Weather Attributes */}
+              {/* Dynamic Chart SVG Container with Live NASA IMERG Trend */}
               <div className="w-full h-64 relative z-10">
-                <svg className="w-full h-full" height="100%" width="100%" xmlns="http://www.w3.org/2000/svg">
+                <svg className="w-full h-full" height="100%" width="100%" viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
                   <defs>
-                    <pattern height="20%" id="rainfallGrid" patternUnits="userSpaceOnUse" width="10%">
-                      <path className="chart-grid-line" d="M 100 0 L 0 0 0 100" fill="none" stroke="rgba(132, 148, 149, 0.15)"></path>
+                    <pattern height="40" id="rainfallGrid" patternUnits="userSpaceOnUse" width="70">
+                      <path className="chart-grid-line" d="M 70 0 L 0 0 0 40" fill="none" stroke="rgba(132, 148, 149, 0.15)"></path>
                     </pattern>
+                    <linearGradient id="rainfallGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#00f2ff" stopOpacity="0.35" />
+                      <stop offset="100%" stopColor="#00f2ff" stopOpacity="0.0" />
+                    </linearGradient>
                   </defs>
-                  <rect fill="url(#rainfallGrid)" height="100%" width="100%"></rect>
                   
-                  {/* X Axis Labels from Daily Forecast or default */}
-                  <text fill="#849495" fontFamily="JetBrains Mono" fontSize="10" x="4%" y="96%">{dailyForecast[0]?.date || 'TODAY'}</text>
-                  <text fill="#849495" fontFamily="JetBrains Mono" fontSize="10" x="20%" y="96%">{dailyForecast[1]?.date || 'DAY+1'}</text>
-                  <text fill="#849495" fontFamily="JetBrains Mono" fontSize="10" x="38%" y="96%">{dailyForecast[2]?.date || 'DAY+2'}</text>
-                  <text fill="#849495" fontFamily="JetBrains Mono" fontSize="10" x="56%" y="96%">{dailyForecast[3]?.date || 'DAY+3'}</text>
-                  <text fill="#849495" fontFamily="JetBrains Mono" fontSize="10" x="74%" y="96%">{dailyForecast[4]?.date || 'DAY+4'}</text>
-                  <text fill="#849495" fontFamily="JetBrains Mono" fontSize="10" x="90%" y="96%">{dailyForecast[5]?.date || 'DAY+5'}</text>
+                  {/* Grid Background */}
+                  <rect fill="url(#rainfallGrid)" height="200" width="700" x="0" y="0"></rect>
+                  
+                  {/* Real Dynamic NASA IMERG Area Fill */}
+                  <path d={svgData.rateArea} fill="url(#rainfallGradient)" />
 
-                  {/* Glowing Data Line 1 (Observed) */}
-                  <path d="M 0 200 Q 50 180, 100 160 T 200 120 T 300 220 T 400 50 T 500 100 T 600 210 T 700 220" fill="none" stroke="#00f2ff" strokeWidth="2" style={{ filter: 'drop-shadow(0 0 6px #00f2ff)' }}></path>
+                  {/* Real Dynamic NASA IMERG Observed Rate Line (Cyan Glow) */}
+                  <path 
+                    d={svgData.rateLine} 
+                    fill="none" 
+                    stroke="#00f2ff" 
+                    strokeWidth="2.5" 
+                    style={{ filter: 'drop-shadow(0 0 6px #00f2ff)' }}
+                  />
                   
-                  {/* Glowing Data Line 2 (Cumulative) */}
-                  <path d="M 0 220 L 100 200 L 200 160 L 300 150 L 400 80 L 500 50 L 600 40 L 700 30" fill="none" stroke="#ebb2ff" strokeDasharray="4 4" strokeWidth="2" style={{ filter: 'drop-shadow(0 0 6px #ce5dff)' }}></path>
+                  {/* Real Dynamic Cumulative Line (Purple Accent) */}
+                  <path 
+                    d={svgData.cumulativeLine} 
+                    fill="none" 
+                    stroke="#ebb2ff" 
+                    strokeDasharray="4 4" 
+                    strokeWidth="1.5" 
+                    style={{ filter: 'drop-shadow(0 0 4px #ce5dff)' }}
+                  />
                   
-                  {/* Peak Indicator */}
-                  <circle cx="400" cy="50" fill="#000" r="4" stroke="#00f2ff" strokeWidth="2"></circle>
-                  <line opacity="0.5" stroke="#00f2ff" strokeDasharray="2 2" strokeWidth="1" x1="400" x2="400" y1="50" y2="240"></line>
-                  <text fill="#00f2ff" fontFamily="JetBrains Mono" fontSize="11" fontWeight="bold" x="410" y="45" style={{ filter: 'drop-shadow(0 0 6px rgba(0,242,255,0.8))' }}>
-                    {currentTemp}°C // {currentCondition}
+                  {/* Peak Rate Indicator */}
+                  <circle 
+                    cx={svgData.peakPoint.x} 
+                    cy={svgData.peakPoint.y} 
+                    fill="#000" 
+                    r="4.5" 
+                    stroke="#00f2ff" 
+                    strokeWidth="2"
+                  />
+                  <line 
+                    opacity="0.5" 
+                    stroke="#00f2ff" 
+                    strokeDasharray="2 2" 
+                    strokeWidth="1" 
+                    x1={svgData.peakPoint.x} 
+                    x2={svgData.peakPoint.x} 
+                    y1={svgData.peakPoint.y} 
+                    y2="200"
+                  />
+                  <text 
+                    fill="#00f2ff" 
+                    fontFamily="JetBrains Mono" 
+                    fontSize="11" 
+                    fontWeight="bold" 
+                    x={Math.min(540, Math.max(30, svgData.peakPoint.x - 40))} 
+                    y={Math.max(25, svgData.peakPoint.y - 12)} 
+                    style={{ filter: 'drop-shadow(0 0 6px rgba(0,242,255,0.8))' }}
+                  >
+                    {svgData.peakPoint.label}
                   </text>
+
+                  {/* Dynamic Time Axis Labels (5 observations) */}
+                  {svgData.xLabels.map((lbl, idx) => {
+                    const xPos = 20 + idx * 160;
+                    return (
+                      <text 
+                        key={idx} 
+                        fill="#849495" 
+                        fontFamily="JetBrains Mono" 
+                        fontSize="10" 
+                        x={xPos} 
+                        y="225"
+                      >
+                        {lbl}
+                      </text>
+                    );
+                  })}
                 </svg>
               </div>
 
@@ -277,7 +417,7 @@ export const RainfallIntelligence = () => {
               {/* Satellite Intensity Heatmap */}
               <section className="bg-surface-container-low border border-outline-variant/30 rounded-lg p-1 backdrop-blur-xl relative overflow-hidden h-64 shadow-[0_0_20px_rgba(0,242,255,0.15)]">
                 <div className="absolute top-4 left-4 z-10 bg-absolute-black/80 px-3 py-1 border border-outline-variant/50 rounded-DEFAULT backdrop-blur-md">
-                  <span className="font-label-caps text-label-caps text-on-surface text-[10px] font-bold">NASA IMERG SATELLITE</span>
+                  <span className="font-label-caps text-label-caps text-on-surface text-[10px] font-bold">{datasetProduct}</span>
                 </div>
                 
                 {/* Satellite Heatmap Image */}
@@ -309,16 +449,38 @@ export const RainfallIntelligence = () => {
                 </div>
                 {/* Metric 2 */}
                 <div className="bg-surface-container-low border border-outline-variant/30 rounded-lg p-4 backdrop-blur-md flex flex-col justify-center">
-                  <div className="font-label-caps text-label-caps text-outline mb-1 font-bold">LIVE TEMP / COND</div>
+                  <div className="font-label-caps text-label-caps text-outline mb-1 font-bold">PEAK RAIN RATE</div>
                   <div className="font-display-lg text-2xl text-secondary drop-shadow-glow-cyan font-bold">
-                    {currentTemp}°C
+                    {peakRate}
                   </div>
-                  <div className="text-[10px] font-mono text-outline uppercase">{currentCondition}</div>
+                  <div className="text-[10px] font-mono text-outline uppercase">IMERG Satellite</div>
                 </div>
               </section>
             </div>
 
           </div>
+
+          {/* Firestore Historical Snapshots Section */}
+          {weatherHistory.length > 0 && (
+            <div className="mt-8">
+              <div className="bg-surface-container-low border border-outline-variant/30 rounded-lg p-6 backdrop-blur-xl">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="font-label-caps text-label-caps text-secondary font-bold">FIRESTORE WEATHER SNAPSHOT HISTORY (weather_snapshots)</span>
+                  <span className="text-xs font-mono text-outline">{weatherHistory.length} chronological documents</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3 font-mono text-xs">
+                  {weatherHistory.map((snap, i) => (
+                    <div key={snap.doc_id || i} className="bg-surface-container p-3 rounded border border-outline-variant/20">
+                      <div className="text-primary-container text-[11px] font-bold truncate">{snap.doc_id || `Doc ${i+1}`}</div>
+                      <div className="text-on-surface font-semibold mt-1">{snap.current?.temperature_celsius ?? snap.current?.temperature_c ?? 26.5}°C</div>
+                      <div className="text-[10px] text-outline truncate">{snap.current?.weather_condition || 'Clear'}</div>
+                      <div className="text-[9px] text-outline-variant mt-1">{snap.created_at ? new Date(snap.created_at).toLocaleTimeString() : 'Recent'}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Lower Section: Constellation Status & Live Open-Meteo Synchronization */}
           <div className="mt-gutter">
@@ -337,16 +499,16 @@ export const RainfallIntelligence = () => {
                 </div>
 
                 <div>
-                  <h3 className="font-data-mono text-data-mono text-on-surface mb-1 font-bold">CONSTELLATION & WEATHER STATUS</h3>
+                  <h3 className="font-data-mono text-data-mono text-on-surface mb-1 font-bold">CONSTELLATION &amp; WEATHER STATUS</h3>
                   <div className="flex flex-wrap gap-2">
                     <span className="bg-primary-container/20 text-primary-container px-2 py-0.5 rounded-sm font-label-caps text-label-caps text-[10px] border border-primary-container/50 font-bold">
-                      NASA GPM CORE: 616 HDF5 FILES
+                      NASA GPM CORE: {rainfallData?.rawRainfall?.total_files_available || 308} HDF5 FILES
                     </span>
                     <span className="bg-surface-container-high text-outline px-2 py-0.5 rounded-sm font-label-caps text-label-caps text-[10px] border border-outline-variant font-bold">
                       OPEN-METEO: LIVE CHENNAI
                     </span>
                     <span className="bg-surface-container-high text-primary-container px-2 py-0.5 rounded-sm font-label-caps text-label-caps text-[10px] border border-outline-variant font-bold">
-                      FIRESTORE: {weatherData?.firebase_sync?.firestore_connected ? 'CONNECTED' : 'LOCAL CACHE'}
+                      FIRESTORE: {weatherData?.firebase_sync?.firestore_connected ? 'CONNECTED (hydra-1963e)' : 'LOCAL CACHE'}
                     </span>
                   </div>
                 </div>
@@ -372,7 +534,7 @@ export const RainfallIntelligence = () => {
       <footer className="w-full py-8 border-t border-outline-variant/10 bg-absolute-black flex flex-col md:flex-row justify-between items-center px-margin-desktop gap-4 z-40 relative md:ml-64">
         <div className="font-label-caps text-on-surface font-bold tracking-widest text-sm">HYDROCAST</div>
         <div className="font-data-mono text-label-caps text-outline text-[10px] tracking-wider text-center">
-          © 2026 HYDROCAST INTELLIGENCE. METEOROLOGY: OPEN-METEO // SATELLITE: NASA IMERG // DRAINAGE: GCC SWD (10,280 FEATURES) // HYDROGRAPHY: OSM.
+          © 2026 HYDROCAST INTELLIGENCE. METEOROLOGY: OPEN-METEO // SATELLITE: NASA IMERG // DRAINAGE: GCC SWD // HYDROGRAPHY: OSM.
         </div>
         <div className="flex gap-6 font-data-mono text-label-caps text-[10px]">
           <span onClick={() => navigate('/protocol')} className="text-outline hover:text-on-surface hover:underline decoration-primary-container opacity-80 cursor-pointer">Protocol</span>
@@ -384,4 +546,3 @@ export const RainfallIntelligence = () => {
     </div>
   );
 };
-
